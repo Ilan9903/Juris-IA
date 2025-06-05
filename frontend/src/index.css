@@ -1,0 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300;400;500;600;800&family=Work+Sans&display=swap");
+@import "slick-carousel/slick/slick.css";
+@import "slick-carousel/slick/slick-theme.css";
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #05101c;
+  background-color: #0b1929;
+  /* background-color: red !important; */
+  color: white;
+  font-family: "Roboto Slab", serif;
+}
+
+/* Styles pour contrer l'autocomplétion des navigateurs */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #333 inset !important;
+  /* Remplace #333 par la couleur de fond de tes inputs */
+  -webkit-text-fill-color: white !important;
+  /* Couleur du texte auto-rempli */
+  caret-color: white !important;
+  /* Couleur du curseur */
+  background-color: #333 !important;
+  /* Pour une compatibilité maximale, même si box-shadow est prioritaire */
+}
+
+/* Pour inverser uniquement les avatars MUI par défaut */
+.image-inverted .MuiAvatar-img {
+  filter: invert(1);
+}
+
+.image-inverted2 {
+  filter: invert();
+}
+
+.nav-link {
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-right: 10px;
+  margin-left: 10px;
+  padding: 8px 20px;
+  border-radius: 10px;
+  text-decoration: none;
+  letter-spacing: 1px;
+}
+
+.MuiOutlinedInput-input-root.Mui-focused,
+.MuiOutlinedInput-notchedOutline {
+  border-color: white !important;
+  color: white !important;
+}
+
+.rotate {
+  animation: rotation 8s infinite linear;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
