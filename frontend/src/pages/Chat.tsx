@@ -1,92 +1,129 @@
 // frontend_src/pages/Chat.tsx
-import {
-  Avatar,
-  Box,
-  Button,
-  CircularProgress,
-  IconButton,
-  Paper,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import red from "@mui/material/colors/red";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+
+// --- Imports de React et des librairies ---
+import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+
+// --- Imports des icônes ---
+import AddCommentIcon from '@mui/icons-material/AddComment';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { FaPlus, FaTimes } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
-import { useNavigate } from "react-router-dom";
+
+// --- Imports de Material-UI ---
+import {
+  Avatar, Box, Button, CircularProgress, Divider, IconButton, List,
+  ListItem, ListItemButton, ListItemText, Paper, Tooltip, Typography
+} from "@mui/material";
+import red from "@mui/material/colors/red";
+
+// --- Imports des composants et helpers locaux ---
 import ChatItem from "../components/chat/ChatItem";
 import { useAuth } from "../context/useAuth";
 import {
   analyzeDocumentWithQuestion,
-  deleteUserChats,
-  getUserChats,
-  sendChatRequest,
+  deleteConversation,
+  getConversationMessages,
+  getConversationsList,
+  sendChatMessage,
+  startNewConversation,
 } from "../helpers/api-communicator";
+
+// --- Définition des types pour plus de clarté ---
+type ConversationSnippet = {
+  _id: string;
+  title: string;
+  createdAt: string;
+};
 
 type Message = {
   role: "user" | "assistant";
-  content: string; // Assumons que content sera toujours une chaîne, même vide, après chargement/création
-  isDocumentResponse?: boolean;
-  documentName?: string;
+  content: string;
 };
 
 const Chat = () => {
+  // --- Hooks et États ---
   const navigate = useNavigate();
-  const inputRef = useRef<HTMLInputElement | null>(null); // Peut toujours être utile pour .focus()
+  const auth = useAuth();
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const auth = useAuth();
-  const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
-  const [inputValue, setInputValue] = useState(""); // Nouvel état pour le champ de saisie
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const [conversations, setConversations] = useState<ConversationSnippet[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const [isLoadingConversations, setIsLoadingConversations] = useState<boolean>(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState<boolean>(false);
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+
+  // --- Effets (useEffect) ---
   useEffect(() => {
     if (!auth?.user) {
       navigate("/login");
     }
   }, [auth, navigate]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (auth?.isLoggedIn && auth.user) {
-      getUserChats()
+      setIsLoadingConversations(true);
+      getConversationsList()
         .then((data) => {
-          if (data && data.chats) {
-            setChatMessages([...data.chats.map((chat: any) => ({ ...chat, content: chat.content || '' }))]); // S'assurer que content est une chaîne
+          setConversations(data.conversations || []);
+          if (data.conversations && data.conversations.length > 0) {
+            setActiveConversationId(data.conversations[0]._id);
           }
         })
         .catch((err) => {
-          console.log(err);
-          toast.error("Erreur : Chargement des chats échoué.");
+          console.error(err);
+          toast.error("Erreur : Chargement de l'historique échoué.");
+        })
+        .finally(() => {
+          setIsLoadingConversations(false);
         });
     }
-  }, [auth, auth?.isLoggedIn, auth?.user]);
+  }, [auth]);
+
+  useEffect(() => {
+    if (activeConversationId) {
+      setIsLoadingMessages(true);
+      setChatMessages([]);
+      getConversationMessages(activeConversationId)
+        .then((data) => {
+          setChatMessages(data.messages || []);
+        })
+        .catch((err) => {
+          console.error(err);
+          setChatMessages([]);
+          toast.error("Impossible de charger cette conversation.");
+        })
+        .finally(() => {
+          setIsLoadingMessages(false);
+        });
+    } else {
+      setChatMessages([]);
+    }
+  }, [activeConversationId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
+  // --- Gestionnaires d'événements ---
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       const allowedTypes = ["text/plain", "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"];
       if (!allowedTypes.includes(file.type)) {
-        toast.error(`Type de fichier non supporté: ${file.name}. Veuillez sélectionner un .txt, .pdf, .doc ou .docx.`);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        return;
-      }
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      if (file.size > maxSize) {
-        toast.error(`Le fichier "${file.name}" est trop volumineux (max 10MB).`);
+        toast.error(`Type de fichier non supporté: ${file.name}.`);
         if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
       setSelectedFile(file);
-      setInputValue(""); // Vider l'input texte quand un fichier est sélectionné pour la question sur le doc
+      setInputValue("");
       toast.success(`Fichier "${file.name}" prêt. Posez votre question.`);
       inputRef.current?.focus();
     }
@@ -100,11 +137,33 @@ const Chat = () => {
     toast.success("Fichier désélectionné.");
   };
 
-  const handleSubmit = async () => {
-    const content = inputValue.trim(); // Utiliser l'état inputValue
-    // console.log("handleSubmit triggered. Content:", content, "SelectedFile:", selectedFile, "IsAnalyzing:", isAnalyzing);
+  const handleNewConversation = async () => {
+    try {
+      const data = await startNewConversation();
+      setConversations(prev => [data.conversation, ...prev]);
+      setActiveConversationId(data.conversation._id);
+    } catch (error) {
+      toast.error("Impossible de démarrer une nouvelle discussion.");
+    }
+  };
 
-    if (!selectedFile && !content) return;
+  const handleDeleteConversation = async (e: React.MouseEvent, conversationId: string) => {
+    e.stopPropagation();
+    if (!window.confirm("Voulez-vous vraiment supprimer cette discussion ?")) return;
+    try {
+      await deleteConversation(conversationId);
+      setConversations(prev => prev.filter(c => c._id !== conversationId));
+      if (activeConversationId === conversationId) {
+        setActiveConversationId(conversations.length > 1 ? conversations.find(c => c._id !== conversationId)?._id || null : null);
+      }
+      toast.success("Discussion supprimée.");
+    } catch (error) {
+      toast.error("Impossible de supprimer la discussion.");
+    }
+  };
+
+  const handleSubmit = async () => {
+    const content = inputValue.trim();
 
     if (selectedFile) {
       if (!content) {
@@ -112,258 +171,202 @@ const Chat = () => {
         return;
       }
       const questionForFile = content;
-      setInputValue(""); // Vider l'input
+      setInputValue("");
       const userMessage: Message = { role: "user", content: `Question sur le document "${selectedFile.name}": ${questionForFile}` };
-      setChatMessages((prev) => [...prev, userMessage]);
+      setChatMessages(prev => [...prev, userMessage]);
       setIsAnalyzing(true);
-      const analysisToastId = toast.loading(`Analyse de "${selectedFile.name}" en cours...`);
+      const analysisToastId = toast.loading(`Analyse de "${selectedFile.name}"...`);
       const currentFileForAnalysis = selectedFile;
       try {
         const analysisData = await analyzeDocumentWithQuestion(currentFileForAnalysis, questionForFile);
-        const assistantMessage: Message = { role: "assistant", content: analysisData.answer || "Je n'ai pas pu trouver de réponse.", isDocumentResponse: true, documentName: analysisData.originalFilename || currentFileForAnalysis.name };
-        setChatMessages((prev) => [...prev, assistantMessage]);
+        const assistantMessage: Message = { role: "assistant", content: analysisData.answer || "Je n'ai pas pu trouver de réponse." };
+        setChatMessages(prev => [...prev, assistantMessage]);
         toast.success("Analyse terminée.", { id: analysisToastId });
-      } catch (error: unknown) {
-        console.error("Erreur handleSubmit (analyse):", error);
-        let errorMessage = "Erreur lors de l'analyse du document.";
-        if (typeof error === "object" && error !== null) {
-          if ("response" in error && typeof (error as { response?: { data?: { message?: string } } }).response?.data?.message === "string") {
-            errorMessage = (error as { response: { data: { message: string } } }).response.data.message;
-          } else if ("message" in error && typeof (error as { message?: string }).message === "string") {
-            errorMessage = (error as { message: string }).message;
-          }
-        }
-        const assistantErrorMessage: Message = { role: "assistant", content: `Erreur d'analyse (${currentFileForAnalysis.name}): ${errorMessage}`, isDocumentResponse: true, documentName: currentFileForAnalysis.name };
-        setChatMessages((prev) => [...prev, assistantErrorMessage]);
-        toast.error(errorMessage, { id: analysisToastId });
+      } catch (error) {
+        const assistantErrorMessage: Message = { role: "assistant", content: `Désolé, une erreur est survenue lors de l'analyse.` };
+        setChatMessages(prev => [...prev, assistantErrorMessage]);
+        toast.error("Erreur d'analyse.", { id: analysisToastId });
       } finally {
         setSelectedFile(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
         setIsAnalyzing(false);
       }
-    } else if (content) {
-      setInputValue(""); // Vider l'input
-      const newMessage: Message = { role: "user", content };
-      setChatMessages((prev) => [...prev, newMessage]);
-      const loadingToastId = toast.loading("Envoi du message...");
+      return;
+    }
+
+    if (!content) return;
+    let conversationIdToUse = activeConversationId;
+    if (!conversationIdToUse) {
       try {
-        const chatData = await sendChatRequest(content);
-        if (chatData && chatData.chats) {
-          setChatMessages([...chatData.chats.map((chat: any) => ({ ...chat, content: chat.content || '' }))]); // S'assurer que content est une chaîne
-        } else {
-          setChatMessages((prev) => [...prev, { role: "assistant", content: "Réponse inattendue du serveur." }]);
-        }
-        toast.success("Message envoyé.", { id: loadingToastId });
+        const data = await startNewConversation();
+        const newConv = data.conversation;
+        setConversations(prev => [newConv, ...prev]);
+        setActiveConversationId(newConv._id);
+        conversationIdToUse = newConv._id;
       } catch (error) {
-        console.error("Erreur handleSubmit (chat normal):", error);
-        toast.error("Erreur : Message non envoyé.", { id: loadingToastId });
+        toast.error("Erreur lors de la création de la discussion.");
+        return;
+      }
+    }
+
+    if (conversationIdToUse) {
+      setInputValue("");
+      const newMessage: Message = { role: "user", content };
+      setChatMessages(prev => [...prev, newMessage]);
+      try {
+        const data = await sendChatMessage(conversationIdToUse, content);
+        setChatMessages(data.messages);
+      } catch (error) {
+        toast.error("Erreur : Message non envoyé.");
+        setChatMessages(prev => prev.slice(0, prev.length - 1));
       }
     }
   };
 
-  const handleDeleteChats = async () => {
-    try {
-      toast.loading("Suppression des chats...", { id: "deletechats" });
-      await deleteUserChats();
-      setChatMessages([]);
-      toast.success("Succès : Chats effacés.", { id: "deletechats" });
-    } catch (error) {
-      console.log(error);
-      toast.error("Erreur : Chats non effacés.", { id: "deletechats" });
-    }
-  };
-
-  if (!auth || !auth.user) {
+  if (!auth?.user) {
     return <Typography color="white">Chargement...</Typography>;
   }
 
   const userNameInitials = auth.user.name?.split(" ").map((n) => n[0]).join("") ?? "?";
-
-  const chatContainerSx = {
-    flexGrow: 1,
-    overflowY: "auto",
-    p: { xs: 1, sm: isMobile ? 1.5 : 2, md: 2 },
-    bgcolor: "transparent",
-    '&::-webkit-scrollbar': { width: '8px' },
-    '&::-webkit-scrollbar-track': { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '4px' },
-    '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(0, 255, 252, 0.3)', borderRadius: '4px', '&:hover': { backgroundColor: 'rgba(0, 255, 252, 0.5)' } },
-  };
-
-  const inputAreaSx = {
-    p: { xs: 1.5, sm: 1.5 },
-    backgroundColor: "transparent",
-    mt: 1,
-  };
-
-  const textInputPaperSx = {
-    display: "flex",
-    alignItems: "center",
-    p: "8px 12px",
-    borderRadius: "28px",
-    backgroundColor: "rgb(17,29,39)",
-    boxShadow: "0px 2px 8px rgba(0,0,0,0.5)",
-  };
-
-  // Condition pour désactiver le bouton d'envoi
   const isSendButtonDisabled = isAnalyzing || (!selectedFile && !inputValue.trim());
 
   return (
     <Box
       sx={{
-        display: "flex",
-        flexDirection: "row",
-        width: "100%",
-        height: "100%",
-        // pt: '80px',
-        boxSizing: 'border-box',
-        bgcolor: "#0b1929",
-        overflow: 'hidden',
+        display: "flex", flexDirection: "row", width: "100%", height: "100%",
+        boxSizing: 'border-box', bgcolor: "#0b1929", overflow: 'hidden'
       }}
     >
       {/* Sidebar */}
       <Box
         sx={{
-          display: { md: "flex", xs: "none", sm: "none" },
-          flexDirection: "column",
-          flexShrink: 0,
-          width: "280px",
-          height: "100%",
-          marginTop: 2.2,
-          p: 2,
-          boxSizing: 'border-box',
+          display: { md: "flex", xs: "none", sm: "none" }, flexDirection: "column",
+          flexShrink: 0, width: "280px", height: "100%", p: 2, boxSizing: 'border-box'
         }}
       >
         <Paper
           elevation={3}
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            width: "100%",
-            height: "100%",
-            bgcolor: "rgb(17,29,39)",
-            borderRadius: "16px",
-            p: 2,
-            boxShadow: "0px 4px 12px rgba(0,0,0,0.3)",
+            display: "flex", flexDirection: "column", width: "100%", height: "100%",
+            bgcolor: "rgb(17,29,39)", borderRadius: "16px", p: 1, boxShadow: "0px 4px 12px rgba(0,0,0,0.3)"
           }}
         >
-          <Avatar
-            sx={{
-              mx: "auto", my: 2, bgcolor: "white", color: "black",
-              fontWeight: 700, width: 60, height: 60, fontSize: "1.5rem",
-              border: `2px solid ${auth.user.profileImage ? '#03a3c2' : 'transparent'}`
-            }}
-            src={auth.user.profileImage || undefined}
+          <Button
+            variant="outlined" startIcon={<AddCommentIcon />} onClick={handleNewConversation}
+            sx={{ m: 1, borderColor: '#00fffc', color: '#00fffc', '&:hover': { borderColor: 'white', color: 'white' } }}
           >
-            {!auth.user.profileImage && userNameInitials}
-          </Avatar>
-          <Typography variant="h6" sx={{ mx: "auto", fontFamily: "work sans", textAlign: "center", color: "#03a3c2", mb: 1, wordBreak: "break-word" }}>
-            {auth.user.name}
-          </Typography>
-          <Typography sx={{ fontFamily: "work sans", my: 1, p: 1, textAlign: "center", fontSize: "0.8rem", color: "rgba(255,255,255,0.6)" }}>
-            Posez vos questions juridiques. Évitez les informations personnelles.
-          </Typography>
-          <Box sx={{ flexGrow: 1 }} />
-          <Button onClick={handleDeleteChats} sx={{ width: "90%", mb: 1, color: "white", fontWeight: "600", borderRadius: "20px", mx: "auto", bgcolor: red[700], "&:hover": { bgcolor: red[800] } }}>
-            Supprimer Chats
+            Nouvelle Discussion
           </Button>
+          <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', mx: 1 }} />
+          <Box sx={{ flexGrow: 1, overflowY: 'auto', pr: 0.5 }}>
+            {isLoadingConversations ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
+            ) : (
+              <List>
+                {conversations.map((conv) => (
+                  <ListItem key={conv._id} disablePadding secondaryAction={
+                    <Tooltip title="Supprimer">
+                      <IconButton edge="end" onClick={(e) => handleDeleteConversation(e, conv._id)}>
+                        <DeleteIcon sx={{ fontSize: '1rem', color: 'rgba(255,255,255,0.4)', '&:hover': { color: red[500] } }} />
+                      </IconButton>
+                    </Tooltip>
+                  }>
+                    <ListItemButton
+                      selected={activeConversationId === conv._id} onClick={() => setActiveConversationId(conv._id)}
+                      sx={{ '&.Mui-selected': { bgcolor: 'rgba(0, 255, 252, 0.1)' } }}
+                    >
+                      <ListItemText
+                        primary={conv.title}
+                        primaryTypographyProps={{
+                          noWrap: true,
+                          sx: { fontSize: '0.875rem', color: activeConversationId === conv._id ? '#00fffc' : 'white' }
+                        }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </Box>
+          <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', mx: 1 }} />
+          <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar
+              sx={{ bgcolor: "white", color: "black", fontWeight: 700, width: 40, height: 40 }}
+              src={auth.user.profileImage || undefined}
+            >
+              {!auth.user.profileImage && userNameInitials}
+            </Avatar>
+            <Typography sx={{ color: 'white', fontWeight: 600, wordBreak: "break-word" }}>
+              {auth.user.name}
+            </Typography>
+          </Box>
         </Paper>
       </Box>
 
       {/* Chat Main */}
       <Box
         sx={{
-          display: "flex",
-          flexDirection: "column",
-          flexGrow: 1,
-          height: "100%",
-          overflow: 'hidden',
-          minWidth: { md: "400px" },
-          maxWidth: { md: "1300px" },
-          mx: "auto",
-          width: "100%",
-          p: { xs: 1, sm: isMobile ? 1 : 1.5, md: 2 }
+          display: "flex", flexDirection: "column", flexGrow: 1, height: "100%",
+          overflow: 'hidden', maxWidth: { md: "900px" }, mx: "auto", width: "100%",
+          p: { xs: 1, sm: 1, md: 2 }
         }}
       >
-        <Typography sx={{
-          fontSize: isMobile ? "1.5rem" : "clamp(24px, 5vw, 36px)", // Taille de police du titre ajustée
-          color: "white", mb: 1, marginTop: 1, mx: "auto", fontWeight: "600", textAlign: "center"
-        }}>
-          Juris IA - GPT 4.1-mini
+        <Typography sx={{ fontSize: "clamp(24px, 5vw, 36px)", color: "white", mb: 1, mx: "auto", fontWeight: "600", textAlign: "center" }}>
+          Juris IA
         </Typography>
 
-        <Box sx={chatContainerSx} > {/* Correction ici: sx={chatContainerSx} */}
-          {chatMessages.map((chat, index) => (
-            <ChatItem
-              content={chat.content} // Assurez-vous que chat.content est toujours une chaîne ici
-              role={chat.role}
-              key={`${index}-${chat.role}-${(chat.content || '').substring(0, 10)}`} // Clé plus robuste
-            />
-          ))}
+        <Box sx={{ flexGrow: 1, overflowY: 'auto', p: { xs: 1, sm: 2, md: 2 }, bgcolor: "transparent" }}>
+          {isLoadingMessages ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>
+          ) : chatMessages.length > 0 ? (
+            chatMessages.map((chat, index) => <ChatItem key={`${activeConversationId}-${index}`} content={chat.content} role={chat.role} />)
+          ) : (
+            <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 4 }}>
+              Commencez une nouvelle discussion ou sélectionnez-en une dans l'historique.
+            </Typography>
+          )}
           <div ref={messagesEndRef} />
         </Box>
 
-        <Box sx={inputAreaSx}>
+        <Box sx={{ p: { xs: 1.5, sm: 2 }, backgroundColor: "transparent", mt: 1 }}>
           {selectedFile && !isAnalyzing && (
             <Box sx={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              p: "4px 12px", mb: 1, backgroundColor: 'rgb(28, 40, 51)', borderRadius: '16px',
-              border: '1px solid #03a3c230', maxWidth: '100%', alignSelf: 'center',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: "4px 12px", mb: 1,
+              backgroundColor: 'rgb(28, 40, 51)', borderRadius: '16px', border: '1px solid #00fffc30',
+              maxWidth: '100%', alignSelf: 'center',
             }}>
               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', mr: 1 }}>
                 {selectedFile.name}
               </Typography>
-              <IconButton size="small" onClick={handleRemoveFile} sx={{ color: 'rgba(255,255,255,0.7)', '&:hover': { color: '#03a3c2' }, p: 0.2 }} title="Retirer le document">
+              <IconButton size="small" onClick={handleRemoveFile} sx={{ color: 'rgba(255,255,255,0.7)', '&:hover': { color: '#00fffc' }, p: 0.2 }} title="Retirer le document">
                 <FaTimes />
               </IconButton>
             </Box>
           )}
-          <Paper component="form" sx={textInputPaperSx} onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+          <Paper component="form" sx={{ display: "flex", alignItems: "center", p: "8px 12px", borderRadius: "28px", backgroundColor: "rgb(23, 35, 49)" }} onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
             <input
               type="file"
               hidden
               ref={fileInputRef}
-              onChange={handleFileChange}
+              onChange={handleFileChange} // CORRECTION 2: L'événement est maintenant connecté
               accept=".txt,.pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               disabled={isAnalyzing}
             />
-            <IconButton
-              onClick={() => fileInputRef.current?.click()}
-              sx={{ color: isAnalyzing ? "grey" : "#03a3c2", p: "10px" }}
-              disabled={isAnalyzing}
-              title="Joindre un document"
-            >
+            <IconButton onClick={() => fileInputRef.current?.click()} sx={{ color: isAnalyzing ? "grey" : "#00fffc", p: "10px" }} disabled={isAnalyzing} title="Joindre un document">
               <FaPlus />
             </IconButton>
             <input
-              ref={inputRef} // Garder la ref si besoin pour .focus()
-              type="text"
+              ref={inputRef} type="text"
               placeholder={isAnalyzing ? "Analyse en cours..." : (selectedFile ? "Question sur le document..." : "Envoyer un message...")}
               style={{
-                flexGrow: 1,
-                backgroundColor: "transparent",
-                border: "none",
-                outline: "none",
-                color: "white",
-                fontSize: isMobile ? "0.9rem" : "1rem", // Taille de police de l'input ajustée
-                padding: isMobile ? "8px" : "10px",
+                flexGrow: 1, backgroundColor: "transparent", border: "none", outline: "none",
+                color: "white", fontSize: "1rem", padding: "10px"
               }}
-              value={inputValue} // Lier à l'état
-              onChange={(e) => setInputValue(e.target.value)} // Mettre à jour l'état
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
+              value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
               disabled={isAnalyzing}
             />
-            <IconButton
-              type="submit"
-              onClick={handleSubmit}
-              sx={{ color: isSendButtonDisabled ? "grey" : "#03a3c2", p: "10px" }}
-              disabled={isSendButtonDisabled} // Utiliser la variable pour l'état disabled
-              title="Envoyer"
-            >
+            <IconButton type="submit" sx={{ color: isSendButtonDisabled ? "grey" : "#00fffc", p: "10px" }} disabled={isSendButtonDisabled} title="Envoyer">
               {isAnalyzing ? <CircularProgress size={24} sx={{ color: "#00fffc" }} /> : <IoMdSend />}
             </IconButton>
           </Paper>

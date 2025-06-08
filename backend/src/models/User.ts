@@ -34,14 +34,27 @@ const chatSchema = new mongoose.Schema({
   },
 });
 
+// NOUVEAU: Schéma pour une conversation
+const conversationSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    default: "Nouvelle Discussion", // Titre par défaut
+  },
+  messages: {
+    type: [chatSchema], // Chaque conversation a son propre tableau de messages
+    default: [],
+  },
+}, { timestamps: true }); // Ajoute createdAt et updatedAt à chaque conversation
+
+
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   // Le tableau 'chats' est maintenant basé sur 'chatSchema' et est un tableau par défaut vide.
-  chats: {
-    type: [chatSchema],
-    default: [], // TRÈS IMPORTANT : Initialise le tableau par défaut comme vide
+  conversations: { // NOUVEAU CHAMP
+    type: [conversationSchema],
+    default: [],
   },
   profileImage: { type: String, default: "" },
   status: { type: String, default: "" },

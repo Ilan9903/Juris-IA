@@ -31,21 +31,56 @@ export const checkAuthStatus = async () => {
   return res.data;
 };
 
-export const sendChatRequest = async (message: string) => {
-  const res = await api.post("/chat/new", { message });
-  if (res.status !== 200) throw new Error("Unable to send chat");
+// export const sendChatRequest = async (message: string) => {
+//   const res = await api.post("/chat/new", { message });
+//   if (res.status !== 200) throw new Error("Unable to send chat");
+//   return res.data;
+// };
+
+// export const getUserChats = async () => {
+//   const res = await api.get("/chat/all-chats");
+//   if (res.status !== 200) throw new Error("Unable to get chats");
+//   return res.data;
+// };
+
+// export const deleteUserChats = async () => {
+//   const res = await api.delete("/chat/delete");
+//   if (res.status !== 200) throw new Error("Unable to delete chats");
+//   return res.data;
+// };
+
+// Récupère la liste des titres de conversations pour la sidebar
+export const getConversationsList = async () => {
+  const res = await axios.get("/chat/conversations");
+  if (res.status !== 200) throw new Error("Impossible de récupérer la liste des conversations");
   return res.data;
 };
 
-export const getUserChats = async () => {
-  const res = await api.get("/chat/all-chats");
-  if (res.status !== 200) throw new Error("Unable to get chats");
+// Récupère les messages d'une conversation spécifique
+export const getConversationMessages = async (conversationId: string) => {
+  const res = await axios.get(`/chat/conversations/${conversationId}`);
+  if (res.status !== 200) throw new Error("Impossible de récupérer les messages de la conversation");
   return res.data;
 };
 
-export const deleteUserChats = async () => {
-  const res = await api.delete("/chat/delete");
-  if (res.status !== 200) throw new Error("Unable to delete chats");
+// Démarre une nouvelle conversation vide
+export const startNewConversation = async () => {
+  const res = await axios.post("/chat/conversations");
+  if (res.status !== 201) throw new Error("Impossible de démarrer une nouvelle conversation");
+  return res.data;
+};
+
+// Envoie un message dans une conversation existante
+export const sendChatMessage = async (conversationId: string, message: string) => {
+  const res = await axios.post(`/chat/conversations/${conversationId}/messages`, { message });
+  if (res.status !== 200) throw new Error("Impossible d'envoyer le message");
+  return res.data;
+};
+
+// Supprime une conversation
+export const deleteConversation = async (conversationId: string) => {
+  const res = await axios.delete(`/chat/conversations/${conversationId}`);
+  if (res.status !== 200) throw new Error("Impossible de supprimer la conversation");
   return res.data;
 };
 
