@@ -70,7 +70,7 @@ const ChatItem = ({
       fontSize: "1rem",
       ml: isUser ? 1.5 : 0,
       mr: isUser ? 0 : 1.5,
-      alignSelf: "flex-start",
+      alignSelf: "flex-end",
       mt: 0.5,
     }
   };
@@ -95,7 +95,7 @@ const ChatItem = ({
         p: 0,
         flexDirection: isUser ? "row-reverse" : "row",
         mb: 2,
-        alignItems: "flex-start",
+        alignItems: "flex-end",
       }}
     >
       <Avatar {...avatarProps} /> {/* Appliquer les props conditionnelles ici */}
