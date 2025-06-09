@@ -4,6 +4,7 @@ import { Box, Button, Divider, IconButton, Modal, Stack, Switch, TextField, Typo
 import axios from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useUI } from "../../context/UIContext";
 import { deleteCurrentUserAccount } from '../../helpers/api-communicator';
 
 // Style de la modale, inspiré de ProfilModal pour la cohérence
@@ -21,23 +22,20 @@ const style = {
     outline: 'none',
 };
 
-interface SettingsModalProps {
-    open: boolean;
-    handleClose: () => void;
-}
+const SettingsModal = () => {
 
-const SettingsModal = ({ open, handleClose }: SettingsModalProps) => {
+    const { isSettingsModalOpen, closeSettingsModal, navigateToProfile } = useUI();
 
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [passwordForDelete, setPasswordForDelete] = useState("");
 
     // Réinitialiser l'état interne de la modale quand elle se ferme
     useEffect(() => {
-        if (!open) {
+        if (!isSettingsModalOpen) {
             setShowDeleteConfirm(false);
             setPasswordForDelete("");
         }
-    }, [open]);
+    }, [isSettingsModalOpen]);
 
     const handleThemeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         console.log("Thème sombre activé:", event.target.checked);
@@ -74,18 +72,14 @@ const SettingsModal = ({ open, handleClose }: SettingsModalProps) => {
     };
 
     return (
-        <Modal
-            open={open}
-            onClose={handleClose} // La réinitialisation est gérée par le useEffect
-            aria-labelledby="settings-modal-title"
-        >
+        <Modal open={isSettingsModalOpen} onClose={closeSettingsModal}>
             <Box sx={style}>
                 {/* En-tête de la modale */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Typography id="settings-modal-title" variant="h6" component="h2">
                         {showDeleteConfirm ? "Confirmer la Suppression" : "Paramètres ⚙️"}
                     </Typography>
-                    <IconButton onClick={handleClose} sx={{ color: 'white' }}>
+                    <IconButton onClick={closeSettingsModal} sx={{ color: 'white' }}>
                         <CloseIcon />
                     </IconButton>
                 </Box>
@@ -133,6 +127,14 @@ const SettingsModal = ({ open, handleClose }: SettingsModalProps) => {
                 ) : (
                     // VUE PRINCIPALE DES PARAMÈTRES
                     <Stack spacing={2.5} divider={<Divider sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />}>
+
+                        <Box>
+                            <Typography variant="overline" sx={{ color: 'grey.500' }}>Compte</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                                <Typography>Modifier le profil</Typography>
+                                <Button size="small" variant="outlined" onClick={navigateToProfile} sx={{ color: 'white', borderColor: 'grey.700' }}>Modifier</Button>
+                            </Box>
+                        </Box>
 
                         <Box>
                             <Typography variant="overline" sx={{ color: 'grey.500' }}>Apparence</Typography>

@@ -23,7 +23,7 @@ import red from "@mui/material/colors/red";
 
 // --- Imports des composants et helpers locaux ---
 import ChatItem from "../components/chat/ChatItem";
-import SettingsModal from "../components/modals/SettingsModal";
+import { useUI } from "../context/UIContext"; // Import du contexte UI pour le Drawer
 import { useAuth } from "../context/useAuth";
 import {
   analyzeDocumentWithQuestion,
@@ -65,9 +65,7 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
   const [isLoadingMessages, setIsLoadingMessages] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
 
-  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
-  const handleOpenSettings = () => setSettingsModalOpen(true);
-  const handleCloseSettings = () => setSettingsModalOpen(false);
+  const { openSettingsModal } = useUI();
 
   // --- Effets (useEffect) ---
   useEffect(() => {
@@ -317,7 +315,7 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
 
         {/* CORRECTION : Le bouton ouvre maintenant la modale */}
         <Tooltip title="Paramètres">
-          <IconButton onClick={handleOpenSettings}> {/* <--- MODIFICATION ICI */}
+          <IconButton onClick={openSettingsModal}> {/* <--- MODIFICATION ICI */}
             <SettingsIcon sx={{ color: 'rgba(255,255,255,0.7)', '&:hover': { color: 'white' } }} />
           </IconButton>
         </Tooltip>
@@ -426,7 +424,6 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
           </Box>
         </Box>
       </Box>
-      <SettingsModal open={settingsModalOpen} handleClose={handleCloseSettings} />
     </>
   );
 };

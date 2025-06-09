@@ -2,6 +2,8 @@ import Box from "@mui/material/Box";
 import { useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
+import ProfilModal from "./components/modals/ProfilModal";
+import SettingsModal from "./components/modals/SettingsModal";
 import { useAuth } from "./context/useAuth"; // MODIFIÉ: Importe useAuth du nouveau fichier
 import ArticleDetailPage from "./pages/ArticleDetailPage";
 import ArticlesPage from "./pages/ArticlesPage";
@@ -48,6 +50,8 @@ const App = () => {
           <Route path="/articles/:id" element={<ArticleDetailPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <ProfilModal />
+        <SettingsModal />
       </Box>
     </Box>
   );

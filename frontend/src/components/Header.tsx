@@ -2,9 +2,9 @@
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu'; // Importer l'icône du menu
 import { AppBar, Avatar, Badge, Box, IconButton, Toolbar, Tooltip, useMediaQuery, useTheme } from "@mui/material"; // Ajout de Box
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import ProfileModal from "../components/modals/ProfilModal";
+import { useUI } from "../context/UIContext"; // Importer le contexte UI
 import { useAuth } from "../context/useAuth";
 import Logo from "./shared/Logo";
 import NavigationLink from "./shared/NavigationLink";
@@ -57,7 +57,7 @@ const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({ status, avatarSrc, us
 // Le composant Header reçoit maintenant la prop onMenuClick
 const Header = ({ onMenuClick }: { onMenuClick: () => void }) => {
   const auth = useAuth();
-  const [modalOpen, setModalOpen] = useState(false);
+  const { openProfileModal } = useUI();
   const user = auth?.user;
   const location = useLocation();
   const navigate = useNavigate();
@@ -78,9 +78,6 @@ const Header = ({ onMenuClick }: { onMenuClick: () => void }) => {
   useEffect(() => {
     // console.log("[Header useEffect] User object or status changed:", user?.status);
   }, [user]);
-
-  const handleOpen = () => setModalOpen(true);
-  const handleClose = () => setModalOpen(false);
   const avatarSrc = user?.profileImage || "/pdp_none.png";
 
   const handleLogout = async () => {
@@ -136,7 +133,7 @@ const Header = ({ onMenuClick }: { onMenuClick: () => void }) => {
                   status={user?.status}
                   avatarSrc={avatarSrc}
                   userName={user?.name}
-                  onOpen={handleOpen}
+                  onOpen={openProfileModal}
                 />
                 {isMobile ? (
                   <Tooltip title="Déconnexion">
@@ -184,7 +181,6 @@ const Header = ({ onMenuClick }: { onMenuClick: () => void }) => {
           </div>
         </Toolbar>
       </AppBar>
-      <ProfileModal open={modalOpen} handleClose={handleClose} />
     </>
   );
 };

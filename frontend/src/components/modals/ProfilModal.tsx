@@ -1,5 +1,6 @@
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
+import SettingsIcon from "@mui/icons-material/Settings";
 import {
     Avatar,
     Box,
@@ -11,12 +12,14 @@ import {
     Modal,
     Select,
     TextField,
+    Tooltip,
     Typography,
 } from "@mui/material";
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import Cropper, { Area } from "react-easy-crop";
 import toast from "react-hot-toast";
+import { useUI } from "../../context/UIContext";
 import { useAuth } from "../../context/useAuth";
 
 const modalStyle = {
@@ -74,7 +77,8 @@ async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<Blob> {
     });
 }
 
-const ProfileModal = ({ open, handleClose }: { open: boolean; handleClose: () => void }) => {
+const ProfileModal = () => {
+    const { isProfileModalOpen, closeProfileModal, navigateToSettings } = useUI();
     const { user, updateUser } = useAuth();
 
     const [name, setName] = useState("");
@@ -106,7 +110,7 @@ const ProfileModal = ({ open, handleClose }: { open: boolean; handleClose: () =>
     }, [user]);
 
     useEffect(() => {
-        if (!open) {
+        if (!isProfileModalOpen) {
             setImage(null);
             setCroppingMode(false);
             setCrop({ x: 0, y: 0 });
@@ -117,7 +121,7 @@ const ProfileModal = ({ open, handleClose }: { open: boolean; handleClose: () =>
             setShowPasswordConfirm(false);
             setPasswordConfirm("");
         }
-    }, [open]);
+    }, [isProfileModalOpen]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -172,7 +176,7 @@ const ProfileModal = ({ open, handleClose }: { open: boolean; handleClose: () =>
 
             updateUser(res.data.user);
             toast.success("Succès : Profil mis à jour !");
-            handleClose();
+            closeProfileModal();
         } catch (err) {
             console.error(err);
             toast.error("Erreur : Mise à jour du profil.");
@@ -205,13 +209,20 @@ const ProfileModal = ({ open, handleClose }: { open: boolean; handleClose: () =>
     };
 
     return (
-        <Modal open={open} onClose={handleClose}>
+        <Modal open={isProfileModalOpen} onClose={closeProfileModal}>
             <Box component="form" sx={modalStyle} onSubmit={handleSubmit}>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                     <Typography variant="h6">Profil Utilisateur 🪪</Typography>
-                    <IconButton onClick={handleClose} sx={{ color: "white" }}>
-                        <CloseIcon />
-                    </IconButton>
+                    <Box>
+                        <Tooltip title="Paramètres">
+                            <IconButton onClick={navigateToSettings} sx={{ color: "white" }}>
+                                <SettingsIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <IconButton onClick={closeProfileModal} sx={{ color: "white" }}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
                 </Box>
 
                 {croppingMode ? (
@@ -432,7 +443,7 @@ const ProfileModal = ({ open, handleClose }: { open: boolean; handleClose: () =>
                         </FormControl>
 
                         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
-                            <Button variant="outlined" onClick={handleClose} sx={{ color: "white", borderColor: "white" }}>Annuler</Button>
+                            <Button variant="outlined" onClick={closeProfileModal} sx={{ color: "white", borderColor: "white" }}>Annuler</Button>
                             <Button type="submit" variant="contained" sx={{ backgroundColor: "#03a3c2", color: "black" }}>
                                 Sauvegarder
                             </Button>
