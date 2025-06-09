@@ -1,15 +1,20 @@
 // frontend_src/components/modals/SettingsModal.tsx
 import CloseIcon from '@mui/icons-material/Close';
-import { Box, Button, Divider, IconButton, Modal, Stack, Switch, Typography } from "@mui/material";
+import { Box, Button, Divider, IconButton, Modal, Stack, Switch, TextField, Typography } from "@mui/material";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { useAuth } from "../../context/useAuth";
+import { deleteCurrentUserAccount } from '../../helpers/api-communicator';
 
-// Style de la modale (inchangé)
+// Style de la modale, inspiré de ProfilModal pour la cohérence
 const style = {
     position: 'absolute' as const,
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
     width: { xs: '90%', sm: 500 },
-    bgcolor: '#0b1929', // Un fond légèrement différent pour se démarquer
+    bgcolor: '#0b1929',
     color: 'white',
     borderRadius: 3,
     boxShadow: 24,
@@ -23,72 +28,133 @@ interface SettingsModalProps {
 }
 
 const SettingsModal = ({ open, handleClose }: SettingsModalProps) => {
-    // Logique factice pour le switch de thème
+    const auth = useAuth();
+
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [passwordForDelete, setPasswordForDelete] = useState("");
+
+    // Réinitialiser l'état interne de la modale quand elle se ferme
+    useEffect(() => {
+        if (!open) {
+            setShowDeleteConfirm(false);
+            setPasswordForDelete("");
+        }
+    }, [open]);
+
     const handleThemeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         console.log("Thème sombre activé:", event.target.checked);
-        // Ici, vous implémenteriez la logique de changement de thème avec votre Contexte de Thème
+        // Logique future pour le changement de thème
+    };
+
+    // Gère la suppression du compte après confirmation du mot de passe
+    const handleAccountDeleteConfirm = async () => {
+        if (!passwordForDelete) {
+            return toast.error("Veuillez entrer votre mot de passe.");
+        }
+        const toastId = toast.loading("Vérification et suppression...");
+        try {
+            // Étape 1: Vérifier le mot de passe
+            await axios.post("/user/verify-password", { password: passwordForDelete });
+
+            // Étape 2: Si le mot de passe est bon, supprimer le compte
+            await deleteCurrentUserAccount();
+
+            toast.success("Votre compte a été supprimé. Vous allez être redirigé.", {
+                id: toastId,
+                duration: 4000 // Laisser le temps à l'utilisateur de lire le message
+            });
+
+            setTimeout(() => {
+                window.location.href = "/"; // Redirige vers la page d'accueil
+            }, 1500); // Délai de 1.5 secondes
+
+        } catch (error: any) {
+            console.error("Erreur lors de la suppression du compte", error);
+            const errorMessage = error.response?.data?.message || "Mot de passe incorrect ou erreur serveur.";
+            toast.error(errorMessage, { id: toastId });
+        }
     };
 
     return (
         <Modal
             open={open}
-            onClose={handleClose}
+            onClose={handleClose} // La réinitialisation est gérée par le useEffect
             aria-labelledby="settings-modal-title"
         >
             <Box sx={style}>
                 {/* En-tête de la modale */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Typography id="settings-modal-title" variant="h6" component="h2">
-                        Paramètres
+                        {showDeleteConfirm ? "Confirmer la Suppression" : "Paramètres"}
                     </Typography>
                     <IconButton onClick={handleClose} sx={{ color: 'white' }}>
                         <CloseIcon />
                     </IconButton>
                 </Box>
 
-                {/* Contenu de la modale organisé avec Stack */}
-                <Stack spacing={2} divider={<Divider sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />}>
-
-                    {/* Section Compte */}
-                    <Box>
-                        <Typography variant="overline" sx={{ color: 'grey.500' }}>Compte</Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                            <Typography>Changer le mot de passe</Typography>
-                            <Button size="small" variant="outlined" sx={{ color: 'white', borderColor: 'grey.700' }}>Changer</Button>
-                        </Box>
-                    </Box>
-
-                    {/* Section Apparence */}
-                    <Box>
-                        <Typography variant="overline" sx={{ color: 'grey.500' }}>Apparence</Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                            <Typography>Thème sombre</Typography>
-                            <Switch defaultChecked onChange={handleThemeChange} />
-                        </Box>
-                    </Box>
-
-                    {/* Section Données */}
-                    <Box>
-                        <Typography variant="overline" sx={{ color: 'grey.500' }}>Données</Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                            <Typography>Exporter toutes les conversations</Typography>
-                            <Button size="small" variant="outlined" sx={{ color: 'white', borderColor: 'grey.700' }}>Exporter</Button>
-                        </Box>
-                    </Box>
-
-                    {/* Zone de Danger */}
-                    <Box sx={{ mt: 2, p: 2, border: '1px solid rgba(255, 82, 82, 0.5)', borderRadius: '8px' }}>
-                        <Typography variant="overline" color="error">Zone de Danger</Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                            <Typography>Supprimer le compte</Typography>
-                            <Button size="small" variant="contained" color="error">Supprimer</Button>
-                        </Box>
-                        <Typography variant="caption" sx={{ color: 'grey.500', display: 'block', mt: 1 }}>
-                            Cette action est irréversible. Toutes vos données seront définitivement perdues.
+                {/* Contenu conditionnel */}
+                {showDeleteConfirm ? (
+                    // VUE DE CONFIRMATION POUR LA SUPPRESSION
+                    <Stack spacing={2}>
+                        <Typography color="error.main">
+                            Cette action est irréversible. Pour confirmer la suppression définitive de votre compte, veuillez entrer votre mot de passe.
                         </Typography>
-                    </Box>
+                        <TextField
+                            fullWidth
+                            autoFocus
+                            label="Mot de passe"
+                            type="password"
+                            value={passwordForDelete}
+                            onChange={(e) => setPasswordForDelete(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleAccountDeleteConfirm(); }}
+                            InputProps={{ style: { color: "white", borderRadius: '8px', backgroundColor: '#1e1e1e' } }}
+                            InputLabelProps={{ style: { color: "grey.400" } }}
+                            sx={{
+                                "& .MuiOutlinedInput-notchedOutline": { borderColor: "grey.700" },
+                                "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "white" },
+                            }}
+                        />
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
+                            <Button variant="outlined" onClick={() => setShowDeleteConfirm(false)}>Annuler</Button>
+                            <Button variant="contained" color="error" onClick={handleAccountDeleteConfirm}>
+                                Supprimer Définitivement
+                            </Button>
+                        </Box>
+                    </Stack>
+                ) : (
+                    // VUE PRINCIPALE DES PARAMÈTRES
+                    <Stack spacing={2.5} divider={<Divider sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />}>
 
-                </Stack>
+                        <Box>
+                            <Typography variant="overline" sx={{ color: 'grey.500' }}>Apparence</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                                <Typography>Thème sombre</Typography>
+                                <Switch defaultChecked onChange={handleThemeChange} />
+                            </Box>
+                        </Box>
+
+                        <Box>
+                            <Typography variant="overline" sx={{ color: 'grey.500' }}>Données</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                                <Typography>Exporter les conversations</Typography>
+                                <Button size="small" variant="outlined" sx={{ color: 'white', borderColor: 'grey.700' }}>Exporter</Button>
+                            </Box>
+                        </Box>
+
+                        <Box sx={{ mt: 2, p: 2, border: '1px solid rgba(255, 82, 82, 0.5)', borderRadius: '8px' }}>
+                            <Typography variant="overline" color="error">Zone de Danger</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                                <Typography>Supprimer mon compte</Typography>
+                                <Button size="small" variant="contained" color="error" onClick={() => setShowDeleteConfirm(true)}>
+                                    Supprimer
+                                </Button>
+                            </Box>
+                            <Typography variant="caption" sx={{ color: 'grey.500', display: 'block', mt: 1 }}>
+                                Cette action est irréversible. <br></br> Toutes vos données seront définitivement perdues.
+                            </Typography>
+                        </Box>
+                    </Stack>
+                )}
             </Box>
         </Modal>
     );

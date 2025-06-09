@@ -360,3 +360,42 @@ export const userLogout = async (req: Request, res: Response, next: NextFunction
     return res.status(500).json({ message: "ERROR", cause: error.message });
   }
 };
+
+export const deleteUserAccount = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = res.locals.jwtData.id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé." });
+    }
+
+    // Optionnel : Nettoyer les ressources externes (ex: images sur Cloudinary)
+    if (user.profileImage && !user.profileImage.includes("pdp_none.png")) {
+      const publicIdWithFolder = user.profileImage.split('/').slice(-2).join('/').split('.')[0];
+      if (publicIdWithFolder) {
+        await cloudinary.uploader.destroy(publicIdWithFolder);
+        console.log(`[${new Date().toISOString()}] --- deleteUserAccount: Image Cloudinary supprimée: ${publicIdWithFolder}`);
+      }
+    }
+
+    // Supprimer l'utilisateur de la base de données
+    await User.findByIdAndDelete(userId);
+
+    // Effacer le cookie d'authentification
+    res.clearCookie(COOKIE_NAME, {
+      httpOnly: true,
+      signed: true,
+      path: "/",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    console.log(`[${new Date().toISOString()}] --- deleteUserAccount: Utilisateur ${userId} (${user.email}) supprimé avec succès.`);
+    return res.status(200).json({ message: "Compte supprimé avec succès." });
+
+  } catch (error) {
+    console.error(`[${new Date().toISOString()}] --- deleteUserAccount ERREUR ---`, error);
+    return res.status(500).json({ message: "Erreur serveur lors de la suppression du compte.", cause: error.message });
+  }
+};

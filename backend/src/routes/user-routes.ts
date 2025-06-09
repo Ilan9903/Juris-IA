@@ -1,6 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
 import {
+  deleteUserAccount,
   updateProfile,
   updateStatus,
   userLogin,
@@ -41,5 +42,9 @@ userRoutes.put("/update-status", verifyToken, updateStatus);
 
 // Verify password
 userRoutes.post("/verify-password", verifyToken, verifyPassword);
+
+// NOUVELLE ROUTE : Suppression du compte par l'utilisateur lui-même
+userRoutes.delete("/delete-account", verifyToken, deleteUserAccount);
+
 
 export default userRoutes;

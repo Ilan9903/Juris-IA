@@ -98,6 +98,12 @@ export const updateUser = async (formData: FormData) => {
   return res.data;
 };
 
+export const deleteCurrentUserAccount = async () => {
+  const res = await axios.delete("/user/delete-account");
+  if (res.status !== 200) throw new Error("Impossible de supprimer le compte");
+  return res.data;
+};
+
 // NOUVELLE FONCTION : Mettre à jour le statut de l'utilisateur
 export const updateUserStatus = async (status: "online" | "idle" | "offline") => {
   const res = await api.put("/user/update-status", { status });
