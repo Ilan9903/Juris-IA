@@ -1,6 +1,7 @@
 // frontend_src/pages/Chat.tsx
 
 // --- Imports de React et des librairies ---
+// CORRECTION 1: 'useLayoutEffect' est retiré car il a été remplacé par 'useEffect' pour le scroll.
 import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -13,8 +14,9 @@ import { IoMdSend } from "react-icons/io";
 
 // --- Imports de Material-UI ---
 import {
-  Avatar, Box, Button, CircularProgress, Divider, IconButton, List,
-  ListItem, ListItemButton, ListItemText, Paper, Tooltip, Typography
+  Avatar, Box, Button, CircularProgress, Divider,
+  Drawer, IconButton, List,
+  ListItem, ListItemButton, ListItemText, Paper, Tooltip, Typography,
 } from "@mui/material";
 import red from "@mui/material/colors/red";
 
@@ -42,7 +44,8 @@ type Message = {
   content: string;
 };
 
-const Chat = () => {
+// Le composant Chat reçoit maintenant les props pour le Drawer
+const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawerOpen: (isOpen: boolean) => void }) => {
   // --- Hooks et États ---
   const navigate = useNavigate();
   const auth = useAuth();
@@ -72,9 +75,10 @@ const Chat = () => {
       setIsLoadingConversations(true);
       getConversationsList()
         .then((data) => {
-          setConversations(data.conversations || []);
-          if (data.conversations && data.conversations.length > 0) {
-            setActiveConversationId(data.conversations[0]._id);
+          const sortedConversations = data.conversations?.sort((a: ConversationSnippet, b: ConversationSnippet) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) || [];
+          setConversations(sortedConversations);
+          if (sortedConversations.length > 0) {
+            setActiveConversationId(sortedConversations[0]._id);
           }
         })
         .catch((err) => {
@@ -142,6 +146,7 @@ const Chat = () => {
       const data = await startNewConversation();
       setConversations(prev => [data.conversation, ...prev]);
       setActiveConversationId(data.conversation._id);
+      setDrawerOpen(false); // Fermer le drawer après la création
     } catch (error) {
       toast.error("Impossible de démarrer une nouvelle discussion.");
     }
@@ -152,9 +157,10 @@ const Chat = () => {
     if (!window.confirm("Voulez-vous vraiment supprimer cette discussion ?")) return;
     try {
       await deleteConversation(conversationId);
-      setConversations(prev => prev.filter(c => c._id !== conversationId));
+      const updatedConversations = conversations.filter(c => c._id !== conversationId);
+      setConversations(updatedConversations);
       if (activeConversationId === conversationId) {
-        setActiveConversationId(conversations.length > 1 ? conversations.find(c => c._id !== conversationId)?._id || null : null);
+        setActiveConversationId(updatedConversations.length > 0 ? updatedConversations[0]._id : null);
       }
       toast.success("Discussion supprimée.");
     } catch (error) {
@@ -230,6 +236,69 @@ const Chat = () => {
   const userNameInitials = auth.user.name?.split(" ").map((n) => n[0]).join("") ?? "?";
   const isSendButtonDisabled = isAnalyzing || (!selectedFile && !inputValue.trim());
 
+  // --- JSX pour la Sidebar (pour éviter la duplication) ---
+  // Note: j'ai complété le JSX qui était commenté
+  const SidebarContent = () => (
+    <Paper
+      elevation={3}
+      sx={{
+        display: "flex", flexDirection: "column", width: "100%", height: "100%",
+        bgcolor: "rgb(17,29,39)", borderRadius: { xs: 0, md: "16px" }, p: 1,
+        boxShadow: "none",
+      }}
+    >
+      <Button
+        variant="outlined" startIcon={<AddCommentIcon />} onClick={handleNewConversation}
+        sx={{ m: 1, borderColor: '#00fffc', color: '#00fffc', '&:hover': { borderColor: 'white', color: 'white' } }}
+      >
+        Nouvelle Discussion
+      </Button>
+      <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', mx: 1 }} />
+      <Box sx={{ flexGrow: 1, overflowY: 'auto', pr: 0.5 }}>
+        {isLoadingConversations ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
+        ) : (
+          <List>
+            {conversations.map((conv) => (
+              <ListItem key={conv._id} disablePadding secondaryAction={
+                <Tooltip title="Supprimer">
+                  <IconButton edge="end" onClick={(e) => handleDeleteConversation(e, conv._id)}>
+                    <DeleteIcon sx={{ fontSize: '1rem', color: 'rgba(255,255,255,0.4)', '&:hover': { color: red[500] } }} />
+                  </IconButton>
+                </Tooltip>
+              }>
+                <ListItemButton selected={activeConversationId === conv._id} onClick={() => {
+                  setActiveConversationId(conv._id);
+                  setDrawerOpen(false); // Fermer le drawer après sélection
+                }}>
+                  <ListItemText
+                    primary={conv.title}
+                    primaryTypographyProps={{
+                      noWrap: true,
+                      sx: { fontSize: '0.875rem', color: activeConversationId === conv._id ? '#00fffc' : 'white' }
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        )}
+      </Box>
+      <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', mx: 1 }} />
+      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Avatar
+          sx={{ bgcolor: "white", color: "black", fontWeight: 700, width: 40, height: 40 }}
+          src={auth.user?.profileImage || undefined}
+        >
+          {(!auth.user?.profileImage) && userNameInitials}
+        </Avatar>
+        <Typography sx={{ color: 'white', fontWeight: 600, wordBreak: "break-word" }}>
+          {auth.user?.name}
+        </Typography>
+      </Box>
+    </Paper>
+  );
+
   return (
     <Box
       sx={{
@@ -237,71 +306,27 @@ const Chat = () => {
         boxSizing: 'border-box', bgcolor: "#0b1929", overflow: 'hidden'
       }}
     >
-      {/* Sidebar */}
+      {/* Sidebar Fixe pour Desktop */}
       <Box
         sx={{
           display: { md: "flex", xs: "none", sm: "none" }, flexDirection: "column",
           flexShrink: 0, width: "280px", height: "100%", p: 2, boxSizing: 'border-box'
         }}
       >
-        <Paper
-          elevation={3}
-          sx={{
-            display: "flex", flexDirection: "column", width: "100%", height: "100%",
-            bgcolor: "rgb(17,29,39)", borderRadius: "16px", p: 1, boxShadow: "0px 4px 12px rgba(0,0,0,0.3)"
-          }}
-        >
-          <Button
-            variant="outlined" startIcon={<AddCommentIcon />} onClick={handleNewConversation}
-            sx={{ m: 1, borderColor: '#00fffc', color: '#00fffc', '&:hover': { borderColor: 'white', color: 'white' } }}
-          >
-            Nouvelle Discussion
-          </Button>
-          <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', mx: 1 }} />
-          <Box sx={{ flexGrow: 1, overflowY: 'auto', pr: 0.5 }}>
-            {isLoadingConversations ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
-            ) : (
-              <List>
-                {conversations.map((conv) => (
-                  <ListItem key={conv._id} disablePadding secondaryAction={
-                    <Tooltip title="Supprimer">
-                      <IconButton edge="end" onClick={(e) => handleDeleteConversation(e, conv._id)}>
-                        <DeleteIcon sx={{ fontSize: '1rem', color: 'rgba(255,255,255,0.4)', '&:hover': { color: red[500] } }} />
-                      </IconButton>
-                    </Tooltip>
-                  }>
-                    <ListItemButton
-                      selected={activeConversationId === conv._id} onClick={() => setActiveConversationId(conv._id)}
-                      sx={{ '&.Mui-selected': { bgcolor: 'rgba(0, 255, 252, 0.1)' } }}
-                    >
-                      <ListItemText
-                        primary={conv.title}
-                        primaryTypographyProps={{
-                          noWrap: true,
-                          sx: { fontSize: '0.875rem', color: activeConversationId === conv._id ? '#00fffc' : 'white' }
-                        }}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                ))}
-              </List>
-            )}
-          </Box>
-          <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', mx: 1 }} />
-          <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar
-              sx={{ bgcolor: "white", color: "black", fontWeight: 700, width: 40, height: 40 }}
-              src={auth.user.profileImage || undefined}
-            >
-              {!auth.user.profileImage && userNameInitials}
-            </Avatar>
-            <Typography sx={{ color: 'white', fontWeight: 600, wordBreak: "break-word" }}>
-              {auth.user.name}
-            </Typography>
-          </Box>
-        </Paper>
+        <SidebarContent />
       </Box>
+
+      {/* Sidebar en "Tiroir" (Drawer) pour Mobile */}
+      <Drawer
+        anchor="left"
+        open={isDrawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        PaperProps={{
+          sx: { width: "280px", bgcolor: "rgb(17,29,39)" }
+        }}
+      >
+        <SidebarContent />
+      </Drawer>
 
       {/* Chat Main */}
       <Box
@@ -348,7 +373,7 @@ const Chat = () => {
               type="file"
               hidden
               ref={fileInputRef}
-              onChange={handleFileChange} // CORRECTION 2: L'événement est maintenant connecté
+              onChange={handleFileChange} // CORRECTION : Connecter l'événement ici
               accept=".txt,.pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               disabled={isAnalyzing}
             />

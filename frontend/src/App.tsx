@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import { useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
 import { useAuth } from "./context/useAuth"; // MODIFIÉ: Importe useAuth du nouveau fichier
@@ -15,9 +16,11 @@ const ACTUAL_HEADER_HEIGHT = "100px";
 const App = () => {
   const auth = useAuth();
 
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}> {/* Conteneur racine */}
-      <Header /> {/* Header est en position: "fixed", donc hors du flux normal */}
+      <Header onMenuClick={() => setDrawerOpen(true)} /> {/* Header est en position: "fixed", donc hors du flux normal */}
 
       {/* Ce Box est le conteneur principal pour tout le contenu SOUS le header */}
       <Box
@@ -35,7 +38,12 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/chat" element={auth?.isLoggedIn && auth.user ? <Chat /> : <Login />} />
+          <Route
+            path="/chat"
+            element={auth?.isLoggedIn && auth.user ?
+              <Chat isDrawerOpen={isDrawerOpen} setDrawerOpen={setDrawerOpen} />
+              : <Login />}
+          />
           <Route path="/articles" element={<ArticlesPage />} />
           <Route path="/articles/:id" element={<ArticleDetailPage />} />
           <Route path="*" element={<NotFound />} />

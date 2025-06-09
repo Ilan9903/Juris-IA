@@ -1,14 +1,14 @@
 // frontend_src/components/Header.tsx
-import LogoutIcon from '@mui/icons-material/Logout'; // Importer l'icône de déconnexion
-import { AppBar, Avatar, Badge, IconButton, Toolbar, Tooltip, useMediaQuery, useTheme } from "@mui/material"; // Ajout de useMediaQuery et useTheme
+import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu'; // Importer l'icône du menu
+import { AppBar, Avatar, Badge, Box, IconButton, Toolbar, Tooltip, useMediaQuery, useTheme } from "@mui/material"; // Ajout de Box
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom"; // Importer useNavigate
+import { useLocation, useNavigate } from "react-router-dom";
 import ProfileModal from "../components/modals/ProfilModal";
 import { useAuth } from "../context/useAuth";
 import Logo from "./shared/Logo";
 import NavigationLink from "./shared/NavigationLink";
 
-// ... (UserStatusBadge component remains the same)
 interface UserStatusBadgeProps {
   status: "online" | "idle" | "offline" | undefined;
   avatarSrc: string;
@@ -40,7 +40,7 @@ const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({ status, avatarSrc, us
             alt={userName || 'User Avatar'}
             className={avatarSrc === "/pdp_none.png" ? "image-inverted" : ""}
             sx={{
-              width: 40, // Taille légèrement réduite pour mobile si besoin
+              width: 40,
               height: 40,
               border: "1px solid #00fffc",
               fontWeight: "bold",
@@ -54,17 +54,26 @@ const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({ status, avatarSrc, us
   );
 };
 
-const Header = () => {
+// Le composant Header reçoit maintenant la prop onMenuClick
+const Header = ({ onMenuClick }: { onMenuClick: () => void }) => {
   const auth = useAuth();
   const [modalOpen, setModalOpen] = useState(false);
   const user = auth?.user;
   const location = useLocation();
-  const navigate = useNavigate(); // Hook pour la navigation
-
+  const navigate = useNavigate();
   const theme = useTheme();
-  // Définir "mobile" comme étant les écrans 'sm' et plus petits
-  // Vous pouvez ajuster le breakpoint (ex: 'xs' uniquement, ou 'md')
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Le menu hamburger apparaitra quand la sidebar disparait (en dessous du breakpoint 'md')
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  useEffect(() => {
+    console.log("--- Header Debug ---");
+    console.log("Breakpoint 'isMobile' (<md) est:", isMobile);
+    console.log("Chemin actuel (location.pathname):", location.pathname);
+    const shouldShowMenu = isMobile && location.pathname === "/chat";
+    console.log("Le menu hamburger devrait-il s'afficher ?", shouldShowMenu);
+    console.log("--------------------");
+  }, [isMobile, location.pathname]);
 
   useEffect(() => {
     // console.log("[Header useEffect] User object or status changed:", user?.status);
@@ -72,12 +81,11 @@ const Header = () => {
 
   const handleOpen = () => setModalOpen(true);
   const handleClose = () => setModalOpen(false);
-
   const avatarSrc = user?.profileImage || "/pdp_none.png";
 
   const handleLogout = async () => {
     await auth.logout();
-    navigate("/"); // Rediriger vers la page d'accueil après la déconnexion
+    navigate("/");
   };
 
   return (
@@ -85,25 +93,41 @@ const Header = () => {
       <AppBar
         sx={{
           bgcolor: "transparent",
-          position: "absolute",
+          position: "fixed", // Assurez-vous qu'il est "fixed" et non "absolute" pour rester en place au scroll
           boxShadow: "none",
-          top: 8,
+          top: 8, // Collé en haut
           width: "100%",
           zIndex: 1100,
         }}
       >
-        {/* Ajuster le padding de la Toolbar pour mobile */}
         <Toolbar sx={{ display: "flex", justifyContent: "space-between", px: { xs: 1, sm: 2 } }}>
-          <Logo />
-          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "4px" : "8px" }}> {/* Gap réduit sur mobile */}
+          {/* Conteneur à gauche pour le menu hamburger et le logo */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {/* Condition d'affichage du menu hamburger */}
+            {isMobile && location.pathname === "/chat" && (
+              <IconButton
+                color="inherit" // Hérite la couleur du parent (blanc par défaut dans la Toolbar)
+                edge="start" // Pour un meilleur positionnement à gauche
+                onClick={onMenuClick} // Appelle la fonction passée par App.tsx
+                sx={{ mr: 1 }} // Marge à droite pour espacer du logo
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+            <Logo />
+          </Box>
+
+          {/* Conteneur à droite pour les liens et l'avatar utilisateur */}
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "4px" : "12px" }}>
             {auth?.isLoggedIn ? (
               <>
-                {location.pathname !== "/chat" && !isMobile && ( // Cacher "Juris IA" sur mobile si déjà sur une autre page
+                {/* CORRECTION : La condition pour afficher le bouton "Juris IA" est restaurée ici */}
+                {location.pathname !== "/chat" && !isMobile && (
                   <NavigationLink
-                    bg="#03a3c2"
+                    bg="#03a3c2" // ou "#00fffc" comme avant, à vous de choisir
                     to="/chat"
                     text="Juris IA"
-                    textColor="white"
+                    textColor="white" // ou "black" si le fond est clair
                   />
                 )}
                 <UserStatusBadge
@@ -117,26 +141,23 @@ const Header = () => {
                     <IconButton
                       onClick={handleLogout}
                       sx={{
-                        color: "white", // Couleur de l'icône
-                        bgcolor: "#1f505f", // Fond similaire au bouton original
-                        '&:hover': {
-                          bgcolor: "#3c3e70", // Assombrir au survol
-                        },
-                        padding: "9px", // Ajuster le padding pour la taille de l'icône
-                        marginLeft: "5px",
-                        marginRight: "3.5px",
+                        color: "white",
+                        bgcolor: "#1f505f",
+                        '&:hover': { bgcolor: "#3c3e70" },
+                        padding: "8px",
+                        marginLeft: "4px"
                       }}
                     >
-                      <LogoutIcon />
+                      <LogoutIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
                 ) : (
                   <NavigationLink
                     bg="#1f505f"
                     textColor="white"
-                    to="/" // La redirection est gérée par handleLogout maintenant
+                    to="/"
                     text="Deconnexion"
-                    onClick={handleLogout} // Utiliser la nouvelle fonction handleLogout
+                    onClick={handleLogout}
                   />
                 )}
               </>
@@ -147,14 +168,14 @@ const Header = () => {
                   to="/login"
                   text="Connexion"
                   textColor="black"
-                  style={isMobile ? { padding: '6px 10px', fontSize: '0.8rem' } : {}} // Style réduit sur mobile
+                  style={isMobile ? { padding: '6px 10px', fontSize: '0.8rem' } : {}}
                 />
                 <NavigationLink
                   bg="#1f505f"
                   textColor="white"
                   to="/signup"
                   text="S'inscrire"
-                  style={isMobile ? { padding: '6px 10px', fontSize: '0.8rem' } : {}} // Style réduit sur mobile
+                  style={isMobile ? { padding: '6px 10px', fontSize: '0.8rem' } : {}}
                 />
               </>
             )}
