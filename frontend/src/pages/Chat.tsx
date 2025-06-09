@@ -243,22 +243,22 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
       elevation={0}
       sx={{
         display: "flex", flexDirection: "column", width: "100%", height: "100%",
-        bgcolor: "rgb(17,29,39)", borderRadius: { xs: 0, md: "16px" }, p: 1,
-        boxShadow: "none", marginTop: "30px", marginBottom: "auto",
+        bgcolor: "#172331", borderRadius: { xs: 0, md: "16px" }, p: 2,
+        boxShadow: "none", marginTop: "18px", overflowX: "hidden", overflowY: "auto",
       }}
     >
       <Button
         variant="outlined" startIcon={<AddCommentIcon />} onClick={handleNewConversation}
-        sx={{ m: 1, borderColor: '#00fffc', color: '#00fffc', '&:hover': { borderColor: 'white', color: 'white' } }}
+        sx={{ borderColor: '#00fffc', color: '#00fffc', '&:hover': { borderColor: 'white', color: 'white' } }}
       >
         Nouvelle Discussion
       </Button>
-      <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', mx: 1 }} />
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', pr: 0.5 }}>
+      <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', my: 2 }} />
+      <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
         {isLoadingConversations ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
         ) : (
-          <List>
+          <List sx={{ p: 0 }}>
             {conversations.map((conv) => (
               <ListItem key={conv._id} disablePadding secondaryAction={
                 <Tooltip title="Supprimer">
@@ -267,10 +267,19 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
                   </IconButton>
                 </Tooltip>
               }>
-                <ListItemButton selected={activeConversationId === conv._id} onClick={() => {
-                  setActiveConversationId(conv._id);
-                  setDrawerOpen(false); // Fermer le drawer après sélection
-                }}>
+                <ListItemButton
+                  selected={activeConversationId === conv._id}
+                  onClick={() => {
+                    setActiveConversationId(conv._id);
+                    setDrawerOpen(false); // Fermer le drawer après sélection
+                  }}
+                  // Ajouter un peu de style aux items
+                  sx={{
+                    borderRadius: '8px',
+                    mb: 0.5,
+                    '&.Mui-selected': { bgcolor: 'rgba(0, 255, 252, 0.1)', '&:hover': { bgcolor: 'rgba(0, 255, 252, 0.2)' } }
+                  }}
+                >
                   <ListItemText
                     primary={conv.title}
                     primaryTypographyProps={{
@@ -284,8 +293,8 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
           </List>
         )}
       </Box>
-      <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', mx: 1 }} />
-      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', my: 1 }} />
+      <Box sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
         <Avatar
           sx={{ bgcolor: "white", color: "black", fontWeight: 700, width: 40, height: 40 }}
           src={auth.user?.profileImage || undefined}
@@ -382,7 +391,7 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
             </IconButton>
             <input
               ref={inputRef} type="text"
-              placeholder={isAnalyzing ? "Analyse en cours..." : (selectedFile ? "Question sur le document..." : "Envoyer un message...")}
+              placeholder={isAnalyzing ? "Analyse en cours..." : ("Envoyer un message...")}
               style={{
                 flexGrow: 1, backgroundColor: "transparent", border: "none", outline: "none",
                 color: "white", fontSize: "1rem", padding: "10px"
