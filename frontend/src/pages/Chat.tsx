@@ -323,6 +323,29 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
     </Paper>
   );
 
+  // C'est cet objet de style qui cible la bonne zone
+  const chatContainerSx = {
+    flexGrow: 1, // Pour qu'il prenne l'espace vertical disponible
+    overflowY: 'auto', // Pour activer le défilement vertical si besoin
+    p: { xs: 1, sm: 2, md: 2 },
+    bgcolor: "transparent",
+
+    // --- C'est ici que la magie opère, uniquement pour cet élément ---
+    '&::-webkit-scrollbar': {
+      width: '8px',
+    },
+    '&::-webkit-scrollbar-track': {
+      backgroundColor: 'rgb(23, 35, 49)', // Fond sombre et discret
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: 'rgba(0, 255, 252, 0.4)', // Poignée avec votre couleur d'accent
+      borderRadius: '4px',
+      '&:hover': {
+        backgroundColor: 'rgba(0, 255, 252, 0.7)', // Plus visible au survol
+      }
+    },
+  };
+
   return (
     <>
       {/* Conteneur principal du chat */}
@@ -366,7 +389,7 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
             Juris IA - GPT 4.1-mini
           </Typography>
 
-          <Box sx={{ flexGrow: 1, overflowY: 'auto', p: { xs: 1, sm: 2, md: 2 }, bgcolor: "transparent" }}>
+          <Box sx={chatContainerSx}>
             {isLoadingMessages ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>
             ) : chatMessages.length > 0 ? (

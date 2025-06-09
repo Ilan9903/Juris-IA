@@ -5,12 +5,14 @@ import { createContext, ReactNode, useContext, useState } from 'react';
 interface UIContextType {
     isProfileModalOpen: boolean;
     isSettingsModalOpen: boolean;
+    isCompactMode: boolean; // NOUVEAU
     openProfileModal: () => void;
     closeProfileModal: () => void;
     openSettingsModal: () => void;
     closeSettingsModal: () => void;
     navigateToSettings: () => void;
     navigateToProfile: () => void;
+    toggleCompactMode: () => void; // NOUVEAU
 }
 
 // Créer le contexte
@@ -20,6 +22,7 @@ const UIContext = createContext<UIContextType | undefined>(undefined);
 export const UIProvider = ({ children }: { children: ReactNode }) => {
     const [isProfileModalOpen, setProfileModalOpen] = useState(false);
     const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
+    const [isCompactMode, setCompactMode] = useState(false); // NOUVEAU état
 
     const openProfileModal = () => setProfileModalOpen(true);
     const closeProfileModal = () => setProfileModalOpen(false);
@@ -40,15 +43,20 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
         setTimeout(() => openProfileModal(), 200);
     };
 
+    // NOUVELLE fonction pour basculer le mode compact
+    const toggleCompactMode = () => setCompactMode(prev => !prev);
+
     const value = {
         isProfileModalOpen,
         isSettingsModalOpen,
+        isCompactMode, // Exposer l'état
         openProfileModal,
         closeProfileModal,
         openSettingsModal,
         closeSettingsModal,
         navigateToSettings,
         navigateToProfile,
+        toggleCompactMode, // Exposer la fonction
     };
 
     return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

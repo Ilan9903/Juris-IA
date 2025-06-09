@@ -3,6 +3,7 @@
 import { Avatar, Box, Paper, Typography } from "@mui/material";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { coldarkDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { useUI } from "../../context/UIContext";
 import { useAuth } from "../../context/useAuth";
 
 function extractCodeFromString(message: string | undefined | null): string[] | null {
@@ -45,6 +46,7 @@ const ChatItem = ({
   content: string;
   role: "user" | "assistant";
 }) => {
+  const { isCompactMode } = useUI(); // Obtenir l'état du mode compact
   const messageBlocks = extractCodeFromString(content);
   const auth = useAuth();
 
@@ -94,7 +96,7 @@ const ChatItem = ({
         display: "flex",
         p: 0,
         flexDirection: isUser ? "row-reverse" : "row",
-        mb: 2,
+        mb: isCompactMode ? 1 : 2,
         alignItems: "flex-end",
       }}
     >
@@ -102,7 +104,8 @@ const ChatItem = ({
       <Paper
         elevation={2}
         sx={{
-          p: "10px 14px",
+          py: isCompactMode ? "6px" : "10px",
+          px: "14px",
           bgcolor: isUser ? "#005A6E" : "rgb(28, 40, 51)",
           borderRadius: isUser ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
           maxWidth: "75%",

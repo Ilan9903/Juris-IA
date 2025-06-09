@@ -24,7 +24,7 @@ const style = {
 
 const SettingsModal = () => {
 
-    const { isSettingsModalOpen, closeSettingsModal, navigateToProfile } = useUI();
+    const { isSettingsModalOpen, closeSettingsModal, navigateToProfile, isCompactMode, toggleCompactMode } = useUI();
 
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [passwordForDelete, setPasswordForDelete] = useState("");
@@ -36,11 +36,6 @@ const SettingsModal = () => {
             setPasswordForDelete("");
         }
     }, [isSettingsModalOpen]);
-
-    const handleThemeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        console.log("Thème sombre activé:", event.target.checked);
-        // Logique future pour le changement de thème
-    };
 
     // Gère la suppression du compte après confirmation du mot de passe
     const handleAccountDeleteConfirm = async () => {
@@ -139,9 +134,13 @@ const SettingsModal = () => {
                         <Box>
                             <Typography variant="overline" sx={{ color: 'grey.500' }}>Apparence</Typography>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                                <Typography>Thème sombre</Typography>
-                                <Switch defaultChecked onChange={handleThemeChange} />
+                                <Typography>Mode Compact</Typography>
+                                {/* Le Switch utilise maintenant l'état et la fonction du Mode Compact */}
+                                <Switch checked={isCompactMode} onChange={toggleCompactMode} />
                             </Box>
+                            <Typography variant="caption" sx={{ color: 'grey.500' }}>
+                                Réduit l'espacement entre les messages pour afficher plus de contenu.
+                            </Typography>
                         </Box>
 
                         <Box>
