@@ -83,7 +83,7 @@ const SettingsModal = ({ open, handleClose }: SettingsModalProps) => {
                 {/* En-tête de la modale */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Typography id="settings-modal-title" variant="h6" component="h2">
-                        {showDeleteConfirm ? "Confirmer la Suppression" : "Paramètres"}
+                        {showDeleteConfirm ? "Confirmer la Suppression" : "Paramètres ⚙️"}
                     </Typography>
                     <IconButton onClick={handleClose} sx={{ color: 'white' }}>
                         <CloseIcon />

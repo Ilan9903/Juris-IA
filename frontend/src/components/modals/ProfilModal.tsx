@@ -208,7 +208,7 @@ const ProfileModal = ({ open, handleClose }: { open: boolean; handleClose: () =>
         <Modal open={open} onClose={handleClose}>
             <Box component="form" sx={modalStyle} onSubmit={handleSubmit}>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                    <Typography variant="h6">Profil Utilisateur</Typography>
+                    <Typography variant="h6">Profil Utilisateur 🪪</Typography>
                     <IconButton onClick={handleClose} sx={{ color: "white" }}>
                         <CloseIcon />
                     </IconButton>
