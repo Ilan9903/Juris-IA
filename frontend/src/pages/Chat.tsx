@@ -244,7 +244,7 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
       sx={{
         display: "flex", flexDirection: "column", width: "100%", height: "100%",
         bgcolor: "rgb(17,29,39)", borderRadius: { xs: 0, md: "16px" }, p: 1,
-        boxShadow: "none",
+        boxShadow: "none", marginTop: "30px", marginBottom: "auto",
       }}
     >
       <Button
@@ -310,7 +310,7 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
       <Box
         sx={{
           display: { md: "flex", xs: "none", sm: "none" }, flexDirection: "column",
-          flexShrink: 0, width: "280px", height: "100%", p: 2, boxSizing: 'border-box'
+          flexShrink: 0, width: "280px", height: "100%", p: 2, boxSizing: 'border-box',
         }}
       >
         <SidebarContent />
