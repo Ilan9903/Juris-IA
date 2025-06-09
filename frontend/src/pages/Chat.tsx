@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 // --- Imports des icônes ---
 import AddCommentIcon from '@mui/icons-material/AddComment';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { FaPlus, FaTimes } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
 
@@ -22,6 +23,7 @@ import red from "@mui/material/colors/red";
 
 // --- Imports des composants et helpers locaux ---
 import ChatItem from "../components/chat/ChatItem";
+import SettingsModal from "../components/modals/SettingsModal";
 import { useAuth } from "../context/useAuth";
 import {
   analyzeDocumentWithQuestion,
@@ -62,6 +64,10 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
   const [isLoadingConversations, setIsLoadingConversations] = useState<boolean>(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const handleOpenSettings = () => setSettingsModalOpen(true);
+  const handleCloseSettings = () => setSettingsModalOpen(false);
 
   // --- Effets (useEffect) ---
   useEffect(() => {
@@ -237,12 +243,11 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
   const isSendButtonDisabled = isAnalyzing || (!selectedFile && !inputValue.trim());
 
   // --- JSX pour la Sidebar (pour éviter la duplication) ---
-  // Note: j'ai complété le JSX qui était commenté
   const SidebarContent = () => (
     <Paper
       elevation={0}
       sx={{
-        display: "flex", flexDirection: "column", width: "100%", height: "100%",
+        display: "flex", flexDirection: "column", width: "88.5%", height: "100%",
         bgcolor: "#172331", borderRadius: { xs: 0, md: "16px" }, p: 2,
         boxShadow: "none", marginTop: "18px", overflowX: "hidden", overflowY: "auto",
       }}
@@ -251,14 +256,14 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
         variant="outlined" startIcon={<AddCommentIcon />} onClick={handleNewConversation}
         sx={{ borderColor: '#00fffc', color: '#00fffc', '&:hover': { borderColor: 'white', color: 'white' } }}
       >
-        Nouvelle Discussion
+        Nouveau Chat
       </Button>
       <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', my: 2 }} />
       <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
         {isLoadingConversations ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
         ) : (
-          <List sx={{ p: 0 }}>
+          <List sx={{ p: 1, bgcolor: 'transparent', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
             {conversations.map((conv) => (
               <ListItem key={conv._id} disablePadding secondaryAction={
                 <Tooltip title="Supprimer">
@@ -294,119 +299,135 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
         )}
       </Box>
       <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', my: 1 }} />
-      <Box sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Avatar
-          sx={{ bgcolor: "white", color: "black", fontWeight: 700, width: 40, height: 40 }}
-          src={auth.user?.profileImage || undefined}
+      <Box sx={{ p: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Conteneur cliquable pour le profil */}
+        <Box
+          sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1, borderRadius: '8px', p: 1 }}
         >
-          {(!auth.user?.profileImage) && userNameInitials}
-        </Avatar>
-        <Typography sx={{ color: 'white', fontWeight: 600, wordBreak: "break-word" }}>
-          {auth.user?.name}
-        </Typography>
+          <Avatar
+            sx={{ bgcolor: "white", color: "black", fontWeight: 700, width: 40, height: 40 }}
+            src={auth.user?.profileImage || undefined}
+          >
+            {(!auth.user?.profileImage) && userNameInitials}
+          </Avatar>
+          <Typography sx={{ color: 'white', fontWeight: 600, wordBreak: "break-word" }}>
+            {auth.user?.name}
+          </Typography>
+        </Box>
+
+        {/* CORRECTION : Le bouton ouvre maintenant la modale */}
+        <Tooltip title="Paramètres">
+          <IconButton onClick={handleOpenSettings}> {/* <--- MODIFICATION ICI */}
+            <SettingsIcon sx={{ color: 'rgba(255,255,255,0.7)', '&:hover': { color: 'white' } }} />
+          </IconButton>
+        </Tooltip>
       </Box>
     </Paper>
   );
 
   return (
-    <Box
-      sx={{
-        display: "flex", flexDirection: "row", width: "100%", height: "100%",
-        boxSizing: 'border-box', bgcolor: "#0b1929", overflow: 'hidden'
-      }}
-    >
-      {/* Sidebar Fixe pour Desktop */}
+    <>
+      {/* Conteneur principal du chat */}
       <Box
         sx={{
-          display: { md: "flex", xs: "none", sm: "none" }, flexDirection: "column",
-          flexShrink: 0, width: "280px", height: "100%", p: 2, boxSizing: 'border-box',
+          display: "flex", flexDirection: "row", width: "100%", height: "100%",
+          boxSizing: 'border-box', bgcolor: "#0b1929", overflow: 'hidden'
         }}
       >
-        <SidebarContent />
-      </Box>
-
-      {/* Sidebar en "Tiroir" (Drawer) pour Mobile */}
-      <Drawer
-        anchor="left"
-        open={isDrawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        PaperProps={{
-          sx: { width: "280px", bgcolor: "rgb(17,29,39)" }
-        }}
-      >
-        <SidebarContent />
-      </Drawer>
-
-      {/* Chat Main */}
-      <Box
-        sx={{
-          display: "flex", flexDirection: "column", flexGrow: 1, height: "100%",
-          overflow: 'hidden', maxWidth: { md: "900px" }, mx: "auto", width: "100%",
-          p: { xs: 1, sm: 1, md: 2 }
-        }}
-      >
-        <Typography sx={{ fontSize: "clamp(24px, 5vw, 36px)", color: "white", mb: 1, mx: "auto", fontWeight: "600", textAlign: "center" }}>
-          Juris IA
-        </Typography>
-
-        <Box sx={{ flexGrow: 1, overflowY: 'auto', p: { xs: 1, sm: 2, md: 2 }, bgcolor: "transparent" }}>
-          {isLoadingMessages ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>
-          ) : chatMessages.length > 0 ? (
-            chatMessages.map((chat, index) => <ChatItem key={`${activeConversationId}-${index}`} content={chat.content} role={chat.role} />)
-          ) : (
-            <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 4 }}>
-              Commencez une nouvelle discussion ou sélectionnez-en une dans l'historique.
-            </Typography>
-          )}
-          <div ref={messagesEndRef} />
+        {/* Sidebar Fixe pour Desktop */}
+        <Box
+          sx={{
+            display: { md: "flex", xs: "none", sm: "none" }, flexDirection: "column",
+            flexShrink: 0, width: "280px", height: "100%", p: 2, boxSizing: 'border-box',
+          }}
+        >
+          <SidebarContent />
         </Box>
 
-        <Box sx={{ p: { xs: 1.5, sm: 2 }, backgroundColor: "transparent", mt: 1 }}>
-          {selectedFile && !isAnalyzing && (
-            <Box sx={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: "4px 12px", mb: 1,
-              backgroundColor: 'rgb(28, 40, 51)', borderRadius: '16px', border: '1px solid #00fffc30',
-              maxWidth: '100%', alignSelf: 'center',
-            }}>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', mr: 1 }}>
-                {selectedFile.name}
+        {/* Sidebar en "Tiroir" (Drawer) pour Mobile */}
+        <Drawer
+          anchor="left"
+          open={isDrawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          PaperProps={{
+            sx: { width: "280px", bgcolor: "rgb(17,29,39)" }
+          }}
+        >
+          <SidebarContent />
+        </Drawer>
+
+        {/* Chat Main */}
+        <Box
+          sx={{
+            display: "flex", flexDirection: "column", flexGrow: 1, height: "100%",
+            overflow: 'hidden', maxWidth: { md: "900px" }, mx: "auto", width: "100%",
+            p: { xs: 1, sm: 1, md: 2 }
+          }}
+        >
+          <Typography sx={{ fontSize: "clamp(24px, 5vw, 36px)", color: "white", mb: 1, marginTop: "2px", fontWeight: "600", textAlign: "center" }}>
+            Juris IA - GPT 4.1-mini
+          </Typography>
+
+          <Box sx={{ flexGrow: 1, overflowY: 'auto', p: { xs: 1, sm: 2, md: 2 }, bgcolor: "transparent" }}>
+            {isLoadingMessages ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>
+            ) : chatMessages.length > 0 ? (
+              chatMessages.map((chat, index) => <ChatItem key={`${activeConversationId}-${index}`} content={chat.content} role={chat.role} />)
+            ) : (
+              <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 4 }}>
+                Commencez une nouvelle discussion ou sélectionnez-en une dans l'historique.
               </Typography>
-              <IconButton size="small" onClick={handleRemoveFile} sx={{ color: 'rgba(255,255,255,0.7)', '&:hover': { color: '#00fffc' }, p: 0.2 }} title="Retirer le document">
-                <FaTimes />
+            )}
+            <div ref={messagesEndRef} />
+          </Box>
+
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, backgroundColor: "transparent", mt: 1 }}>
+            {selectedFile && !isAnalyzing && (
+              <Box sx={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: "4px 12px", mb: 1,
+                backgroundColor: 'rgb(28, 40, 51)', borderRadius: '16px', border: '1px solid #00fffc30',
+                maxWidth: '100%', alignSelf: 'center',
+              }}>
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', mr: 1 }}>
+                  {selectedFile.name}
+                </Typography>
+                <IconButton size="small" onClick={handleRemoveFile} sx={{ color: 'rgba(255,255,255,0.7)', '&:hover': { color: '#00fffc' }, p: 0.2 }} title="Retirer le document">
+                  <FaTimes />
+                </IconButton>
+              </Box>
+            )}
+            <Paper component="form" sx={{ display: "flex", alignItems: "center", p: "8px 12px", borderRadius: "28px", backgroundColor: "rgb(23, 35, 49)" }} onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+              <input
+                type="file"
+                hidden
+                ref={fileInputRef}
+                onChange={handleFileChange} // CORRECTION : Connecter l'événement ici
+                accept=".txt,.pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                disabled={isAnalyzing}
+              />
+              <IconButton onClick={() => fileInputRef.current?.click()} sx={{ color: isAnalyzing ? "grey" : "#00fffc", p: "10px" }} disabled={isAnalyzing} title="Joindre un document">
+                <FaPlus />
               </IconButton>
-            </Box>
-          )}
-          <Paper component="form" sx={{ display: "flex", alignItems: "center", p: "8px 12px", borderRadius: "28px", backgroundColor: "rgb(23, 35, 49)" }} onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-            <input
-              type="file"
-              hidden
-              ref={fileInputRef}
-              onChange={handleFileChange} // CORRECTION : Connecter l'événement ici
-              accept=".txt,.pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              disabled={isAnalyzing}
-            />
-            <IconButton onClick={() => fileInputRef.current?.click()} sx={{ color: isAnalyzing ? "grey" : "#00fffc", p: "10px" }} disabled={isAnalyzing} title="Joindre un document">
-              <FaPlus />
-            </IconButton>
-            <input
-              ref={inputRef} type="text"
-              placeholder={isAnalyzing ? "Analyse en cours..." : ("Envoyer un message...")}
-              style={{
-                flexGrow: 1, backgroundColor: "transparent", border: "none", outline: "none",
-                color: "white", fontSize: "1rem", padding: "10px"
-              }}
-              value={inputValue} onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
-              disabled={isAnalyzing}
-            />
-            <IconButton type="submit" sx={{ color: isSendButtonDisabled ? "grey" : "#00fffc", p: "10px" }} disabled={isSendButtonDisabled} title="Envoyer">
-              {isAnalyzing ? <CircularProgress size={24} sx={{ color: "#00fffc" }} /> : <IoMdSend />}
-            </IconButton>
-          </Paper>
+              <input
+                ref={inputRef} type="text"
+                placeholder={isAnalyzing ? "Analyse en cours..." : ("Envoyer un message...")}
+                style={{
+                  flexGrow: 1, backgroundColor: "transparent", border: "none", outline: "none",
+                  color: "white", fontSize: "1rem", padding: "10px"
+                }}
+                value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
+                disabled={isAnalyzing}
+              />
+              <IconButton type="submit" sx={{ color: isSendButtonDisabled ? "grey" : "#00fffc", p: "10px" }} disabled={isSendButtonDisabled} title="Envoyer">
+                {isAnalyzing ? <CircularProgress size={24} sx={{ color: "#00fffc" }} /> : <IoMdSend />}
+              </IconButton>
+            </Paper>
+          </Box>
         </Box>
       </Box>
-    </Box>
+      <SettingsModal open={settingsModalOpen} handleClose={handleCloseSettings} />
+    </>
   );
 };
 
