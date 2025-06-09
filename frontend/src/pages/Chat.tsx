@@ -240,7 +240,7 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
   // Note: j'ai complété le JSX qui était commenté
   const SidebarContent = () => (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
         display: "flex", flexDirection: "column", width: "100%", height: "100%",
         bgcolor: "rgb(17,29,39)", borderRadius: { xs: 0, md: "16px" }, p: 1,

@@ -102,14 +102,14 @@ const Header = ({ onMenuClick }: { onMenuClick: () => void }) => {
       >
         <Toolbar sx={{ display: "flex", justifyContent: "space-between", px: { xs: 1, sm: 2 } }}>
           {/* Conteneur à gauche pour le menu hamburger et le logo */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             {/* Condition d'affichage du menu hamburger */}
             {isMobile && location.pathname === "/chat" && (
               <IconButton
                 color="inherit" // Hérite la couleur du parent (blanc par défaut dans la Toolbar)
                 edge="start" // Pour un meilleur positionnement à gauche
                 onClick={onMenuClick} // Appelle la fonction passée par App.tsx
-                sx={{ mr: 1 }} // Marge à droite pour espacer du logo
+                sx={{ mr: 0, ml: 1 }} // Marge à droite pour espacer du logo
               >
                 <MenuIcon />
               </IconButton>
@@ -122,12 +122,14 @@ const Header = ({ onMenuClick }: { onMenuClick: () => void }) => {
             {auth?.isLoggedIn ? (
               <>
                 {/* CORRECTION : La condition pour afficher le bouton "Juris IA" est restaurée ici */}
-                {location.pathname !== "/chat" && !isMobile && (
+                {location.pathname !== "/chat" && (
                   <NavigationLink
-                    bg="#03a3c2" // ou "#00fffc" comme avant, à vous de choisir
+                    bg="#03a3c2"
                     to="/chat"
                     text="Juris IA"
-                    textColor="white" // ou "black" si le fond est clair
+                    textColor="white"
+                    // Ajout d'un style conditionnel pour réduire sa taille sur mobile
+                    style={isMobile ? { padding: '6px 10px', fontSize: '0.8rem' } : {}}
                   />
                 )}
                 <UserStatusBadge
