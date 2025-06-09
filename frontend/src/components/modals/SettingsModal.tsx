@@ -4,7 +4,6 @@ import { Box, Button, Divider, IconButton, Modal, Stack, Switch, TextField, Typo
 import axios from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useAuth } from "../../context/useAuth";
 import { deleteCurrentUserAccount } from '../../helpers/api-communicator';
 
 // Style de la modale, inspiré de ProfilModal pour la cohérence
@@ -28,7 +27,6 @@ interface SettingsModalProps {
 }
 
 const SettingsModal = ({ open, handleClose }: SettingsModalProps) => {
-    const auth = useAuth();
 
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [passwordForDelete, setPasswordForDelete] = useState("");
@@ -107,11 +105,22 @@ const SettingsModal = ({ open, handleClose }: SettingsModalProps) => {
                             value={passwordForDelete}
                             onChange={(e) => setPasswordForDelete(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') handleAccountDeleteConfirm(); }}
-                            InputProps={{ style: { color: "white", borderRadius: '8px', backgroundColor: '#1e1e1e' } }}
-                            InputLabelProps={{ style: { color: "grey.400" } }}
+                            InputProps={{ style: { color: "white" } }}
+                            InputLabelProps={{ style: { color: "white" } }}
                             sx={{
-                                "& .MuiOutlinedInput-notchedOutline": { borderColor: "grey.700" },
-                                "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "white" },
+                                "& .MuiInputBase-input": {
+                                    backgroundColor: "transparent", // Fond de l'input
+                                    borderRadius: 1,
+                                },
+                                "& .MuiOutlinedInput-notchedOutline": {
+                                    borderColor: "white",
+                                },
+                                "&:hover .MuiOutlinedInput-notchedOutline": {
+                                    borderColor: "white",
+                                },
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                    borderColor: "white",
+                                },
                             }}
                         />
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>

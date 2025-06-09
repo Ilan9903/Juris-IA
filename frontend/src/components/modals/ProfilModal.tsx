@@ -252,6 +252,7 @@ const ProfileModal = ({ open, handleClose }: { open: boolean; handleClose: () =>
                         <Typography variant="body1">Confirme ton mot de passe pour modifier l'email :</Typography>
                         <TextField
                             fullWidth
+                            autoFocus
                             label="Mot de passe"
                             type="password"
                             value={passwordConfirm}
@@ -260,7 +261,7 @@ const ProfileModal = ({ open, handleClose }: { open: boolean; handleClose: () =>
                             InputLabelProps={{ style: { color: "white" } }}
                             sx={{
                                 "& .MuiInputBase-input": {
-                                    backgroundColor: "#1e1e1e", // Fond de l'input
+                                    backgroundColor: "transparent", // Fond de l'input
                                     borderRadius: 1,
                                 },
                                 "& .MuiOutlinedInput-notchedOutline": {
@@ -401,14 +402,14 @@ const ProfileModal = ({ open, handleClose }: { open: boolean; handleClose: () =>
                         )}
 
                         <FormControl fullWidth sx={{ mb: 3 }}>
-                            <InputLabel id="status-label" sx={{ borderColor: "white", color: "white" }}>Statut</InputLabel>
+                            <InputLabel id="status-label">Statut</InputLabel>
                             <Select
                                 labelId="status-label"
                                 value={status}
                                 onChange={(e) => setStatus(e.target.value as "online" | "idle" | "offline")}
                                 label="Statut"
                                 sx={{
-                                    backgroundColor: "rgb(17,29,39)",
+                                    backgroundColor: "transparent",
                                     color: "white",
                                     ".MuiSelect-icon": { color: "white" },
                                     ".MuiOutlinedInput-notchedOutline": { color: "white", borderColor: "white" },
