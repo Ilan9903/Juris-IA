@@ -136,7 +136,7 @@ const SettingsModal = () => {
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                                 <Typography>Mode Compact</Typography>
                                 {/* Le Switch utilise maintenant l'état et la fonction du Mode Compact */}
-                                <Switch checked={isCompactMode} onChange={toggleCompactMode} />
+                                <Switch checked={isCompactMode} onChange={toggleCompactMode} sx={{ color: "#00fffc" }} />
                             </Box>
                             <Typography variant="caption" sx={{ color: 'grey.500' }}>
                                 Réduit l'espacement entre les messages pour afficher plus de contenu.
