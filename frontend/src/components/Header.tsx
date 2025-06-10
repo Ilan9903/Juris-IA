@@ -1,9 +1,10 @@
 // frontend_src/components/Header.tsx
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu'; // Importer l'icône du menu
 import { AppBar, Avatar, Badge, Box, IconButton, Toolbar, Tooltip, useMediaQuery, useTheme } from "@mui/material"; // Ajout de Box
 import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useUI } from "../context/UIContext"; // Importer le contexte UI
 import { useAuth } from "../context/useAuth";
 import Logo from "./shared/Logo";
@@ -118,7 +119,18 @@ const Header = ({ onMenuClick }: { onMenuClick: () => void }) => {
           <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "4px" : "12px" }}>
             {auth?.isLoggedIn ? (
               <>
-                {/* CORRECTION : La condition pour afficher le bouton "Juris IA" est restaurée ici */}
+                {/* Le bouton n'apparaît que si l'utilisateur est admin */}
+                {auth.user?.role === 'admin' && (
+                  isMobile ? (
+                    <Tooltip title="Dashboard">
+                      <IconButton component={Link} to="/admin" sx={{ color: 'red' }}>
+                        <AdminPanelSettingsIcon />
+                      </IconButton>
+                    </Tooltip>
+                  ) : (
+                    <NavigationLink bg="#c0392b" textColor="white" to="/admin" text="Dashboard" />
+                  )
+                )}
                 {location.pathname !== "/chat" && (
                   <NavigationLink
                     bg="#03a3c2"

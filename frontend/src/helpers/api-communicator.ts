@@ -63,6 +63,12 @@ export const getConversationMessages = async (conversationId: string) => {
   return res.data;
 };
 
+export const updateConversationTitle = async (conversationId: string, title: string) => {
+  const res = await axios.put(`/chat/conversations/${conversationId}/title`, { title });
+  if (res.status !== 200) throw new Error("Impossible de renommer la conversation");
+  return res.data;
+};
+
 // Démarre une nouvelle conversation vide
 export const startNewConversation = async () => {
   const res = await axios.post("/chat/conversations");
@@ -122,6 +128,13 @@ export const getAllUsers = async () => {
   if (res.status !== 200) throw new Error("Unable to fetch users");
   return res.data;
 };
+
+export const adminGetAllArticles = async () => {
+  const res = await axios.get("/admin/articles");
+  if (res.status !== 200) throw new Error("Impossible de récupérer les articles");
+  return res.data;
+};
+
 
 export const getRecentArticles = async (limit: number = 5) => { // Limite par défaut à 5 articles
   try {

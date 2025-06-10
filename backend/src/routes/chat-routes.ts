@@ -6,6 +6,7 @@ import {
   deleteConversation,
   getAllConversations,
   getMessagesForConversation,
+  updateConversationTitle,
 } from "../controllers/chat-controllers.js";
 import { verifyToken } from "../utils/token-manager.js";
 import { chatCompletionValidator, validate } from "../utils/validators.js";
@@ -17,6 +18,7 @@ chatRoutes.get("/conversations", verifyToken, getAllConversations); // Obtenir l
 chatRoutes.get("/conversations/:id", verifyToken, getMessagesForConversation); // Obtenir les messages d'une conversation spécifique
 chatRoutes.post("/conversations", verifyToken, createNewConversation); // Créer une nouvelle conversation
 chatRoutes.post("/conversations/:id/messages", validate(chatCompletionValidator), verifyToken, addMessageToConversation); // Ajouter un message à une conversation
+chatRoutes.put("/conversations/:id/title", verifyToken, updateConversationTitle);
 chatRoutes.delete("/conversations/:id", verifyToken, deleteConversation); // Supprimer une conversation
 
 export default chatRoutes;

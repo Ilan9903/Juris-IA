@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 // --- Imports des icônes ---
 import AddCommentIcon from '@mui/icons-material/AddComment';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { FaPlus, FaTimes } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
@@ -17,7 +18,9 @@ import { IoMdSend } from "react-icons/io";
 import {
   Avatar, Box, Button, CircularProgress, Divider,
   Drawer, IconButton, List,
-  ListItem, ListItemButton, ListItemText, Paper, Tooltip, Typography,
+  ListItem, ListItemButton, ListItemText, Paper,
+  TextField,
+  Tooltip, Typography
 } from "@mui/material";
 import red from "@mui/material/colors/red";
 
@@ -34,6 +37,7 @@ import {
   getConversationsList,
   sendChatMessage,
   startNewConversation,
+  updateConversationTitle,
 } from "../helpers/api-communicator";
 
 // --- Définition des types pour plus de clarté ---
@@ -66,6 +70,9 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
   const [isLoadingConversations, setIsLoadingConversations] = useState<boolean>(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+
+  const [editingConvId, setEditingConvId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
 
   const { openSettingsModal } = useUI();
 
@@ -158,6 +165,38 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
       setDrawerOpen(false); // Fermer le drawer après la création
     } catch (error) {
       toast.error("Impossible de démarrer une nouvelle discussion.");
+    }
+  };
+
+  const handleStartEdit = (conv: ConversationSnippet) => {
+    setEditingConvId(conv._id);
+    setEditingTitle(conv.title);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingConvId(null);
+    setEditingTitle("");
+  };
+
+  const handleTitleUpdate = async (conversationId: string) => {
+    if (!editingTitle.trim()) {
+      toast.error("Le titre ne peut pas être vide.");
+      return;
+    }
+
+    // Optimistic UI update
+    const originalConversations = [...conversations];
+    const newConversations = conversations.map(c =>
+      c._id === conversationId ? { ...c, title: editingTitle } : c
+    );
+    setConversations(newConversations);
+    handleCancelEdit(); // Quitte le mode édition immédiatement
+
+    try {
+      await updateConversationTitle(conversationId, editingTitle);
+    } catch (error) {
+      toast.error("Erreur, impossible de renommer.");
+      setConversations(originalConversations); // Revert en cas d'erreur
     }
   };
 
@@ -282,45 +321,72 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
     >
       <Button
         variant="outlined" startIcon={<AddCommentIcon />} onClick={handleNewConversation}
-        sx={{ borderColor: '#03a3c2', color: '#d5ded8', '&:hover': { borderColor: 'white', color: 'white' } }}
+        sx={{ borderColor: '#03a3c2', color: 'white', '&:hover': { borderColor: 'white', bgcolor: "rgba(0, 0, 0, 0.05)", color: '#03a3c2' } }}
       >
         Nouveau Chat
       </Button>
       <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', my: 2 }} />
       <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
         {isLoadingConversations ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}><CircularProgress /></Box>
         ) : (
-          <List sx={{ p: 1, bgcolor: 'transparent', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+          <List sx={{ p: 0, bgcolor: 'transparent', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
             {conversations.map((conv) => (
               <ListItem key={conv._id} disablePadding secondaryAction={
-                <Tooltip title="Supprimer">
-                  <IconButton edge="end" onClick={(e) => handleDeleteConversation(e, conv._id)}>
-                    <DeleteIcon sx={{ fontSize: '1rem', color: 'rgba(255,255,255,0.4)', '&:hover': { color: red[500] } }} />
-                  </IconButton>
-                </Tooltip>
+                <>
+                  <Tooltip title="Renommer">
+                    <IconButton edge="end" sx={{ mr: 0 }} onClick={() => handleStartEdit(conv)}>
+                      <EditIcon sx={{
+                        mr: -1.5, fontSize: '1rem', color: 'rgba(255, 255, 255, 0.4)', '&:hover': { color: 'white' }
+                      }} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Supprimer">
+                    <IconButton edge="end" onClick={(e) => handleDeleteConversation(e, conv._id)}>
+                      <DeleteIcon sx={{ fontSize: '1rem', color: 'rgba(255,255,255,0.4)', '&:hover': { color: red[500] } }} />
+                    </IconButton>
+                  </Tooltip>
+                </>
               }>
-                <ListItemButton
-                  selected={activeConversationId === conv._id}
-                  onClick={() => {
-                    setActiveConversationId(conv._id);
-                    setDrawerOpen(false); // Fermer le drawer après sélection
-                  }}
-                  // Ajouter un peu de style aux items
-                  sx={{
-                    borderRadius: '8px',
-                    mb: 0.5,
-                    '&.Mui-selected': { bgcolor: 'rgba(0, 255, 255, 0.05)', '&:hover': { bgcolor: 'rgba(0, 255, 252, 0.1)' } }
-                  }}
-                >
-                  <ListItemText
-                    primary={conv.title}
-                    primaryTypographyProps={{
-                      noWrap: true,
-                      sx: { fontSize: '0.875rem', color: activeConversationId === conv._id ? '#00fffc' : 'white' }
+                {editingConvId === conv._id ? (
+                  // AFFICHER LE CHAMP DE TEXTE EN MODE ÉDITION
+                  <TextField
+                    variant="standard"
+                    fullWidth
+                    autoFocus
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    onBlur={() => handleTitleUpdate(conv._id)} // Sauvegarde quand on clique ailleurs
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleTitleUpdate(conv._id);
+                      if (e.key === 'Escape') handleCancelEdit();
                     }}
+                    sx={{ px: 2, '& .MuiInput-underline:before': { borderBottomColor: '#03a3c2' } }}
+                    InputProps={{ style: { color: "white", fontSize: '0.875rem' } }}
                   />
-                </ListItemButton>
+                ) : (
+                  <ListItemButton
+                    selected={activeConversationId === conv._id}
+                    onClick={() => {
+                      setActiveConversationId(conv._id);
+                      setDrawerOpen(false); // Fermer le drawer après sélection
+                    }}
+                    // Ajouter un peu de style aux items
+                    sx={{
+                      borderRadius: '8px',
+                      mb: 0.5,
+                      '&.Mui-selected': { bgcolor: 'rgba(0, 255, 255, 0.05)', '&:hover': { bgcolor: 'rgba(0, 255, 252, 0.1)' } }
+                    }}
+                  >
+                    <ListItemText
+                      primary={conv.title}
+                      primaryTypographyProps={{
+                        noWrap: true,
+                        sx: { fontSize: '0.875rem', color: activeConversationId === conv._id ? '#00fffc' : 'white' }
+                      }}
+                    />
+                  </ListItemButton>
+                )}
               </ListItem>
             ))}
           </List>

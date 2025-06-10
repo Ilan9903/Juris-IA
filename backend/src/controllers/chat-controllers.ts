@@ -157,6 +157,33 @@ export const addMessageToConversation = async (req: Request, res: Response, next
   }
 };
 
+// Mettre à jour le titre d'une conversation
+export const updateConversationTitle = async (req: Request, res: Response, next: NextFunction) => {
+  const { title } = req.body;
+  const conversationId = req.params.id;
+
+  if (!title) {
+    return res.status(400).json({ message: "Le titre est requis." });
+  }
+
+  try {
+    const user = await User.findById(res.locals.jwtData.id);
+    if (!user) return res.status(401).send("Utilisateur non trouvé.");
+
+    const conversation = user.conversations.id(conversationId);
+    if (!conversation) return res.status(404).send("Conversation non trouvée.");
+
+    conversation.title = title;
+    await user.save();
+
+    return res.status(200).json({ message: "Titre mis à jour avec succès." });
+
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du titre:", error);
+    return res.status(500).json({ message: "ERROR", cause: error.message });
+  }
+};
+
 // Supprimer une conversation
 export const deleteConversation = async (req: Request, res: Response, next: NextFunction) => {
   try {

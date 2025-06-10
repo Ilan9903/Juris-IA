@@ -3,6 +3,7 @@
 import { Request, Router } from "express";
 import multer from "multer";
 import {
+    adminGetAllArticles,
     // prompt templates management
     createPromptTemplate,
     // user management
@@ -76,5 +77,7 @@ adminRoutes.get("/prompts", verifyToken, checkPermission(["CAN_MANAGE_PROMPTS"])
 adminRoutes.get("/prompt/:id", verifyToken, checkPermission(["CAN_MANAGE_PROMPTS"]), getPromptTemplateById);
 adminRoutes.put("/prompt/:id", verifyToken, checkPermission(["CAN_MANAGE_PROMPTS"]), updatePromptTemplate);
 adminRoutes.delete("/prompt/:id", verifyToken, checkPermission(["CAN_MANAGE_PROMPTS"]), deletePromptTemplate);
+
+adminRoutes.get("/articles", verifyToken, checkPermission(["CAN_MANAGE_ARTICLES"]), adminGetAllArticles);
 
 export default adminRoutes;

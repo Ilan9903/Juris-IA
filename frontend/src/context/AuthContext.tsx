@@ -25,7 +25,7 @@ type User = {
   role?: "user" | "redacteur" | "admin";
 };
 
-const INACTIVITY_TIMEOUT = 1 * 60 * 1000;
+const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -142,6 +142,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: data.name,
         profileImage: data.profileImage,
         status: data.status || "online",
+        role: data.role,
       });
       setIsLoggedIn(true);
     }
@@ -155,6 +156,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: data.name,
         profileImage: data.profileImage,
         status: data.status || "online",
+        role: data.role,
       });
       setIsLoggedIn(true);
     }
@@ -172,7 +174,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const updateUser = useCallback((updatedUser: User) => {
-    setUser({ ...updatedUser });
+    //setUser({ ...updatedUser });
+    setUser(prevUser => ({ ...prevUser, ...updatedUser } as User));
   }, []);
 
   const contextValue: UserAuth = useMemo(() => ({

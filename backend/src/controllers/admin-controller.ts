@@ -4,6 +4,7 @@ import { compare, hash } from "bcrypt";
 import { NextFunction, Request, Response } from "express";
 import fs from "fs";
 import mongoose from "mongoose";
+import { LegalArticle } from "../models/LegalArticle.js";
 import PromptTemplate from "../models/PromptTemplate.js";
 import User from "../models/User.js";
 import cloudinary from "../utils/cloudinary.js";
@@ -350,5 +351,18 @@ export const deletePromptTemplate = async (req: Request, res: Response, next: Ne
     } catch (error) {
         console.error(`[${new Date().toISOString()}] --- deletePromptTemplate Controller: ERREUR ---`, error);
         return res.status(500).json({ message: "Erreur serveur lors de la suppression du prompt.", cause: error.message });
+    }
+};
+
+// --- NOUVELLE FONCTION POUR LES ARTICLES ---
+
+export const adminGetAllArticles = async (req: Request, res: Response) => {
+    try {
+        // Récupérer tous les articles, triés par date de création (le plus récent en premier)
+        const articles = await LegalArticle.find().sort({ createdAt: -1 });
+        return res.status(200).json({ message: "Articles récupérés avec succès.", articles });
+    } catch (error: any) {
+        console.error(`[${new Date().toISOString()}] --- adminGetAllArticles ERREUR ---`, error);
+        return res.status(500).json({ message: "Erreur serveur lors de la récupération des articles.", cause: error.message });
     }
 };
