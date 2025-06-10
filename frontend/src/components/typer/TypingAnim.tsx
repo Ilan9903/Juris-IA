@@ -11,7 +11,7 @@ const TypingAnim = () => {
         // Same substring at the start will only be typed once, initially
         "Chat avec Juris IA ⚖️",
         1000,
-        "Ton propre assistant IA Juridique",
+        "Ton assistant IA Juridique 💼",
         2000,
         "Créer avec OpenAI 🤖",
         1500,

@@ -74,23 +74,29 @@ input:-webkit-autofill:active {
   height: 10px;
 }
 
-/* Cible la piste (le fond de la barre) */
-::-webkit-scrollbar-track {
-  background-color: rgb(17, 29, 39);
-  /* Fond sombre et discret */
-}
-
 /* Cible la poignée (la partie mobile) */
 ::-webkit-scrollbar-thumb {
   background-color: rgba(0, 255, 252, 0.4);
   /* Couleur d'accent, semi-transparente */
   border-radius: 5px;
-  border: 2px solid rgb(17, 29, 39);
-  /* Bordure pour un effet de flottement */
 }
 
 /* Style de la poignée au survol */
 ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(0, 255, 252, 0.7);
   /* Plus opaque au survol */
+}
+
+.nav-link,
+.MuiButton-root,
+.MuiIconButton-root {
+  transition: all 0.3s ease !important;
+}
+
+/* Effet de survol subtil pour les NavigationLink */
+.nav-link:hover {
+  transform: translateY(-3px);
+  /* Léger mouvement vers le haut */
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+  /* Ombre portée */
 }
