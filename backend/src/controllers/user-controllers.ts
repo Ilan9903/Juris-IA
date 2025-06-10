@@ -328,6 +328,35 @@ export const verifyPassword = async (req: Request, res: Response, next: NextFunc
   }
 };
 
+export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = res.locals.jwtData.id;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé." });
+    }
+
+    // 1. Vérifier si l'ancien mot de passe est correct
+    const isPasswordCorrect = await compare(currentPassword, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(401).json({ message: "L'ancien mot de passe est incorrect." });
+    }
+
+    // 2. Hasher et sauvegarder le nouveau mot de passe
+    const hashedNewPassword = await hash(newPassword, 10);
+    user.password = hashedNewPassword;
+    await user.save();
+
+    return res.status(200).json({ message: "Mot de passe mis à jour avec succès." });
+
+  } catch (error) {
+    console.error(`[${new Date().toISOString()}] --- changePassword ERREUR ---`, error);
+    return res.status(500).json({ message: "Erreur serveur lors de la mise à jour du mot de passe.", cause: error.message });
+  }
+};
+
 export const userLogout = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Utilise res.locals.jwtData

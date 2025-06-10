@@ -5,7 +5,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useUI } from "../../context/UIContext";
-import { deleteCurrentUserAccount } from '../../helpers/api-communicator';
+import { changeUserPassword, deleteCurrentUserAccount } from '../../helpers/api-communicator';
 
 // Style de la modale, inspiré de ProfilModal pour la cohérence
 const style = {
@@ -20,151 +20,151 @@ const style = {
     boxShadow: 24,
     p: { xs: 2, sm: 3, md: 4 },
     outline: 'none',
+    maxHeight: '90vh',
+    overflowY: 'auto'
 };
 
 const SettingsModal = () => {
-
+    // Obtenir l'état et les fonctions depuis le contexte UI
     const { isSettingsModalOpen, closeSettingsModal, navigateToProfile, isCompactMode, toggleCompactMode } = useUI();
 
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    // État pour gérer la vue actuelle de la modale ('main', 'changePassword', 'deleteConfirm')
+    const [view, setView] = useState("main");
+
+    // États pour les différents formulaires
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmNewPassword, setConfirmNewPassword] = useState("");
     const [passwordForDelete, setPasswordForDelete] = useState("");
 
-    // Réinitialiser l'état interne de la modale quand elle se ferme
+    // Réinitialiser les états internes quand la modale se ferme
     useEffect(() => {
         if (!isSettingsModalOpen) {
-            setShowDeleteConfirm(false);
-            setPasswordForDelete("");
+            setTimeout(() => { // Petit délai pour laisser l'animation de fermeture se faire
+                setView("main");
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmNewPassword("");
+                setPasswordForDelete("");
+            }, 200);
         }
     }, [isSettingsModalOpen]);
 
-    // Gère la suppression du compte après confirmation du mot de passe
+    // Soumission du formulaire de changement de mot de passe
+    const handleChangePasswordSubmit = async () => {
+        if (!currentPassword || !newPassword) {
+            return toast.error("Veuillez remplir tous les champs.");
+        }
+        if (newPassword !== confirmNewPassword) {
+            return toast.error("Les nouveaux mots de passe ne correspondent pas.");
+        }
+        const toastId = toast.loading("Mise à jour du mot de passe...");
+        try {
+            await changeUserPassword(currentPassword, newPassword);
+            toast.success("Mot de passe mis à jour avec succès !", { id: toastId });
+            setView("main"); // Revenir à la vue principale
+        } catch (error: any) {
+            const errorMessage = error.response?.data?.message || "Erreur lors de la mise à jour.";
+            toast.error(errorMessage, { id: toastId });
+        }
+    };
+
+    // Soumission du formulaire de suppression de compte
     const handleAccountDeleteConfirm = async () => {
         if (!passwordForDelete) {
             return toast.error("Veuillez entrer votre mot de passe.");
         }
         const toastId = toast.loading("Vérification et suppression...");
         try {
-            // Étape 1: Vérifier le mot de passe
             await axios.post("/user/verify-password", { password: passwordForDelete });
-
-            // Étape 2: Si le mot de passe est bon, supprimer le compte
             await deleteCurrentUserAccount();
-
-            toast.success("Votre compte a été supprimé. Vous allez être redirigé.", {
-                id: toastId,
-                duration: 4000 // Laisser le temps à l'utilisateur de lire le message
-            });
-
+            toast.success("Votre compte a été supprimé. Vous allez être redirigé.", { id: toastId, duration: 4000 });
             setTimeout(() => {
-                window.location.href = "/"; // Redirige vers la page d'accueil
-            }, 1500); // Délai de 1.5 secondes
-
+                window.location.href = "/";
+            }, 1500);
         } catch (error: any) {
-            console.error("Erreur lors de la suppression du compte", error);
             const errorMessage = error.response?.data?.message || "Mot de passe incorrect ou erreur serveur.";
             toast.error(errorMessage, { id: toastId });
         }
     };
 
-    return (
-        <Modal open={isSettingsModalOpen} onClose={closeSettingsModal}>
-            <Box sx={style}>
-                {/* En-tête de la modale */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography id="settings-modal-title" variant="h6" component="h2">
-                        {showDeleteConfirm ? "Confirmer la Suppression" : "Paramètres ⚙️"}
-                    </Typography>
-                    <IconButton onClick={closeSettingsModal} sx={{ color: 'white' }}>
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-
-                {/* Contenu conditionnel */}
-                {showDeleteConfirm ? (
-                    // VUE DE CONFIRMATION POUR LA SUPPRESSION
-                    <Stack spacing={2}>
-                        <Typography color="error.main">
-                            Cette action est irréversible. Pour confirmer la suppression définitive de votre compte, veuillez entrer votre mot de passe.
-                        </Typography>
-                        <TextField
-                            fullWidth
-                            autoFocus
-                            label="Mot de passe"
-                            type="password"
-                            value={passwordForDelete}
-                            onChange={(e) => setPasswordForDelete(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') handleAccountDeleteConfirm(); }}
-                            InputProps={{ style: { color: "white" } }}
-                            InputLabelProps={{ style: { color: "white" } }}
-                            sx={{
-                                "& .MuiInputBase-input": {
-                                    backgroundColor: "transparent", // Fond de l'input
-                                    borderRadius: 1,
-                                },
-                                "& .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: "white",
-                                },
-                                "&:hover .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: "white",
-                                },
-                                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: "white",
-                                },
-                            }}
-                        />
+    // Fonction pour rendre le contenu de la modale en fonction de la vue
+    const renderContent = () => {
+        switch (view) {
+            case 'changePassword':
+                return (
+                    <Stack spacing={3}>
+                        <TextField fullWidth autoFocus label="Ancien mot de passe" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} InputProps={{ style: { color: "white" } }} InputLabelProps={{ style: { color: "white" } }} sx={{ "& .MuiOutlinedInput-notchedOutline": { borderColor: "white" } }} />
+                        <TextField fullWidth label="Nouveau mot de passe" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} InputProps={{ style: { color: "white" } }} InputLabelProps={{ style: { color: "white" } }} sx={{ "& .MuiOutlinedInput-notchedOutline": { borderColor: "white" } }} />
+                        <TextField fullWidth label="Confirmer le nouveau mot de passe" type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleChangePasswordSubmit(); }} InputProps={{ style: { color: "white" } }} InputLabelProps={{ style: { color: "white" } }} sx={{ "& .MuiOutlinedInput-notchedOutline": { borderColor: "white" } }} />
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
-                            <Button variant="outlined" onClick={() => setShowDeleteConfirm(false)}>Annuler</Button>
-                            <Button variant="contained" color="error" onClick={handleAccountDeleteConfirm}>
-                                Supprimer Définitivement
-                            </Button>
+                            <Button variant="outlined" onClick={() => setView('main')}>Annuler</Button>
+                            <Button variant="contained" onClick={handleChangePasswordSubmit} sx={{ bgcolor: '#00fffc', color: 'black', '&:hover': { bgcolor: 'white' } }}>Enregistrer</Button>
                         </Box>
                     </Stack>
-                ) : (
-                    // VUE PRINCIPALE DES PARAMÈTRES
+                );
+            case 'deleteConfirm':
+                return (
+                    <Stack spacing={2}>
+                        <Typography color="error.main">Cette action est irréversible. Pour confirmer, veuillez entrer votre mot de passe.</Typography>
+                        <TextField fullWidth autoFocus label="Mot de passe" type="password" value={passwordForDelete} onChange={(e) => setPasswordForDelete(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleAccountDeleteConfirm(); }} InputProps={{ style: { color: "white" } }} InputLabelProps={{ style: { color: "grey.400" } }} sx={{ "& .MuiOutlinedInput-notchedOutline": { borderColor: "grey.700" } }} />
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
+                            <Button variant="outlined" onClick={() => setView('main')}>Annuler</Button>
+                            <Button variant="contained" color="error" onClick={handleAccountDeleteConfirm}>Supprimer Définitivement</Button>
+                        </Box>
+                    </Stack>
+                );
+            case 'main':
+            default:
+                return (
                     <Stack spacing={2.5} divider={<Divider sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />}>
-
                         <Box>
                             <Typography variant="overline" sx={{ color: 'grey.500' }}>Compte</Typography>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                                 <Typography>Modifier le profil</Typography>
                                 <Button size="small" variant="outlined" onClick={navigateToProfile} sx={{ color: 'white', borderColor: 'grey.700' }}>Modifier</Button>
                             </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                                <Typography>Changer le mot de passe</Typography>
+                                <Button size="small" variant="outlined" onClick={() => setView('changePassword')} sx={{ color: 'white', borderColor: 'grey.700' }}>Changer</Button>
+                            </Box>
                         </Box>
-
                         <Box>
                             <Typography variant="overline" sx={{ color: 'grey.500' }}>Apparence</Typography>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                                 <Typography>Mode Compact</Typography>
-                                {/* Le Switch utilise maintenant l'état et la fonction du Mode Compact */}
-                                <Switch checked={isCompactMode} onChange={toggleCompactMode} sx={{ color: "#00fffc" }} />
-                            </Box>
-                            <Typography variant="caption" sx={{ color: 'grey.500' }}>
-                                Réduit l'espacement entre les messages pour afficher plus de contenu.
-                            </Typography>
-                        </Box>
-
-                        <Box>
-                            <Typography variant="overline" sx={{ color: 'grey.500' }}>Données</Typography>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                                <Typography>Exporter les conversations</Typography>
-                                <Button size="small" variant="outlined" sx={{ color: 'white', borderColor: 'grey.700' }}>Exporter</Button>
+                                <Switch checked={isCompactMode} onChange={toggleCompactMode} />
                             </Box>
                         </Box>
-
                         <Box sx={{ mt: 2, p: 2, border: '1px solid rgba(255, 82, 82, 0.5)', borderRadius: '8px' }}>
                             <Typography variant="overline" color="error">Zone de Danger</Typography>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                                 <Typography>Supprimer mon compte</Typography>
-                                <Button size="small" variant="contained" color="error" onClick={() => setShowDeleteConfirm(true)}>
-                                    Supprimer
-                                </Button>
+                                <Button size="small" variant="contained" color="error" onClick={() => setView('deleteConfirm')}>Supprimer</Button>
                             </Box>
                             <Typography variant="caption" sx={{ color: 'grey.500', display: 'block', mt: 1 }}>
                                 Cette action est irréversible. <br></br> Toutes vos données seront définitivement perdues.
                             </Typography>
                         </Box>
                     </Stack>
-                )}
+                );
+        }
+    };
+
+    return (
+        <Modal open={isSettingsModalOpen} onClose={closeSettingsModal}>
+            <Box sx={style}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Typography variant="h6" component="h2">
+                        {view === 'main' && 'Paramètres'}
+                        {view === 'changePassword' && 'Changer le mot de passe'}
+                        {view === 'deleteConfirm' && 'Confirmer la Suppression'}
+                    </Typography>
+                    <IconButton onClick={closeSettingsModal} sx={{ color: 'white' }}>
+                        <CloseIcon />
+                    </IconButton>
+                </Box>
+                {renderContent()}
             </Box>
         </Modal>
     );

@@ -36,6 +36,13 @@ export const signupValidator = [ //
   ...loginValidator, //
 ];
 
+export const changePasswordValidator = [
+  body("currentPassword").notEmpty().withMessage("L'ancien mot de passe est requis."),
+  body("newPassword")
+    .isLength({ min: 6 })
+    .withMessage("Le nouveau mot de passe doit contenir au moins 6 caractères."),
+];
+
 export const chatCompletionValidator = [ //
   body("message").notEmpty().withMessage("Message  is required"), //
 ];

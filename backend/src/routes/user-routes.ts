@@ -1,6 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
 import {
+  changePassword,
   deleteUserAccount,
   updateProfile,
   updateStatus,
@@ -12,6 +13,7 @@ import {
 } from "../controllers/user-controllers.js";
 import { verifyToken } from "../utils/token-manager.js";
 import {
+  changePasswordValidator,
   loginValidator,
   signupValidator,
   validate,
@@ -43,7 +45,10 @@ userRoutes.put("/update-status", verifyToken, updateStatus);
 // Verify password
 userRoutes.post("/verify-password", verifyToken, verifyPassword);
 
-// NOUVELLE ROUTE : Suppression du compte par l'utilisateur lui-même
+// Change password
+userRoutes.put("/change-password", verifyToken, validate(changePasswordValidator), changePassword);
+
+// Delete user account
 userRoutes.delete("/delete-account", verifyToken, deleteUserAccount);
 
 

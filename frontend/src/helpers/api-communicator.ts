@@ -98,6 +98,12 @@ export const updateUser = async (formData: FormData) => {
   return res.data;
 };
 
+export const changeUserPassword = async (currentPassword: string, newPassword: string) => {
+  const res = await axios.put("/user/change-password", { currentPassword, newPassword });
+  if (res.status !== 200) throw new Error("Impossible de changer le mot de passe");
+  return res.data;
+};
+
 export const deleteCurrentUserAccount = async () => {
   const res = await axios.delete("/user/delete-account");
   if (res.status !== 200) throw new Error("Impossible de supprimer le compte");
