@@ -1,10 +1,12 @@
 // frontend_src/components/admin/UserManagement.tsx
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import { Box, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { Box, CircularProgress, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { adminGetAllUsers } from "../../helpers/api-communicator";
+import { adminDeleteUser, adminGetAllUsers } from "../../helpers/api-communicator";
+import ConfirmationModal from '../modals/ConfirmationModal'; // Importer la modale de confirmation
+import EditUserModal from '././modals/EditUserModal';
 
 // Définir un type pour l'utilisateur admin, plus complet
 interface AdminUser {
@@ -19,24 +21,42 @@ const UserManagement = () => {
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                setLoading(true);
-                const data = await adminGetAllUsers();
-                setUsers(data.users);
-            } catch (error) {
-                console.error(error);
-                toast.error("Erreur lors de la récupération des utilisateurs.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchUsers();
+    const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
+    const [userToEdit, setUserToEdit] = useState<AdminUser | null>(null);
+
+    const fetchUsers = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await adminGetAllUsers();
+            setUsers(data.users);
+        } catch (error) {
+            console.error(error);
+            toast.error("Erreur lors de la récupération des utilisateurs.");
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
+    useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]);
+
+    // Logique pour la suppression
+    const handleConfirmDelete = async () => {
+        if (!userToDelete) return;
+        try {
+            await adminDeleteUser(userToDelete._id);
+            toast.success(`L'utilisateur ${userToDelete.name} a été supprimé.`);
+            setUsers(prev => prev.filter(user => user._id !== userToDelete._id)); // Mettre à jour la liste
+        } catch (error) {
+            toast.error("Erreur lors de la suppression.");
+        } finally {
+            setUserToDelete(null); // Fermer la modale
+        }
+    };
+
     if (loading) {
-        return <div>Chargement de la liste des utilisateurs...</div>;
+        return <CircularProgress />;
     }
 
     return (
@@ -64,12 +84,12 @@ const UserManagement = () => {
                                 <TableCell sx={{ color: 'white' }}>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                                 <TableCell align="right">
                                     <Tooltip title="Modifier">
-                                        <IconButton onClick={() => console.log('Edit user:', user._id)}>
-                                            <EditIcon sx={{ color: 'grey.500' }} />
+                                        <IconButton onClick={() => setUserToEdit(user)}>
+                                            <EditIcon sx={{ color: 'grey.500', '&:hover': { color: 'white' } }} />
                                         </IconButton>
                                     </Tooltip>
                                     <Tooltip title="Supprimer">
-                                        <IconButton onClick={() => console.log('Delete user:', user._id)}>
+                                        <IconButton onClick={() => setUserToDelete(user)}>
                                             <DeleteIcon sx={{ color: 'grey.500', '&:hover': { color: 'red' } }} />
                                         </IconButton>
                                     </Tooltip>
@@ -79,6 +99,19 @@ const UserManagement = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
+            <ConfirmationModal
+                open={!!userToDelete}
+                onClose={() => setUserToDelete(null)}
+                onConfirm={handleConfirmDelete}
+                title="Confirmer la Suppression"
+                message={`Voulez-vous vraiment supprimer l'utilisateur ${userToDelete?.name} ? Cette action est irréversible.`}
+            />
+            <EditUserModal
+                open={!!userToEdit}
+                onClose={() => setUserToEdit(null)}
+                onUserUpdated={fetchUsers} // Rafraîchir la liste après une mise à jour
+                user={userToEdit}
+            />
         </Box>
     );
 };

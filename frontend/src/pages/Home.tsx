@@ -250,7 +250,7 @@ const Home = () => {
                         <Button
                           size="small"
                           variant="outlined"
-                          sx={{ color: "#03a3c5", borderColor: "#03a3c5", fontSize: isMobile ? '0.65rem' : '0.8rem', '&:hover': { backgroundColor: 'rgba(0, 255, 252, 0.06)', borderColor: "#00ddda" } }}
+                          sx={{ color: "white", borderColor: "#03a3c5", fontSize: isMobile ? '0.65rem' : '0.8rem', '&:hover': { backgroundColor: 'rgba(0, 255, 252, 0.06)', borderColor: "#00ddda" } }}
                           onClick={() => handleArticleClick(article._id)}
                         >
                           En savoir plus
@@ -269,7 +269,7 @@ const Home = () => {
               variant="contained"
               component={Link}
               to="/articles"
-              sx={{ bgcolor: "#03a3c9", color: "black", fontWeight: 'bold', '&:hover': { bgcolor: "#00dddc" } }}
+              sx={{ bgcolor: "#03a3c9", color: "white", fontWeight: 'bold', '&:hover': { bgcolor: "#00dddc", color: "black" } }}
             >
               Voir tous les articles
             </Button>

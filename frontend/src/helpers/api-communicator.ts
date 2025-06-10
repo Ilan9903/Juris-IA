@@ -240,3 +240,53 @@ export const adminGetAllUsers = async () => {
   if (res.status !== 200) throw new Error("Impossible de récupérer les utilisateurs");
   return res.data;
 };
+export const adminDeleteUser = async (userId: string) => {
+  const res = await axios.delete(`/admin/user/${userId}`);
+  if (res.status !== 200) throw new Error("Impossible de supprimer l'utilisateur");
+  return res.data;
+};
+
+export const adminUpdateUser = async (userId: string, userData: { name?: string; email?: string; role?: string; }) => {
+  const res = await axios.put(`/admin/user/${userId}`, userData);
+  if (res.status !== 200) throw new Error("Impossible de mettre à jour l'utilisateur");
+  return res.data;
+};
+
+export const adminCreateArticle = async (articleData: { title: string; content: string; category: string[] }) => {
+  const res = await axios.post("/articles", articleData);
+  if (res.status !== 201) throw new Error("Impossible de créer l'article");
+  return res.data;
+};
+
+export const adminUpdateArticle = async (articleId: string, articleData: { title: string; content: string; category: string[] }) => {
+  const res = await axios.put(`/articles/${articleId}`, articleData);
+  if (res.status !== 200) throw new Error("Impossible de mettre à jour l'article");
+  return res.data;
+};
+
+export const adminDeleteArticle = async (articleId: string) => {
+  const res = await axios.delete(`/articles/${articleId}`);
+  if (res.status !== 200) throw new Error("Impossible de supprimer l'article");
+  return res.data;
+};
+
+// NOUVELLE FONCTION pour créer un prompt
+export const adminCreatePrompt = async (promptData: { name: string; content: string; description?: string; category?: string; status?: string; }) => {
+  const res = await axios.post("/admin/prompt", promptData);
+  if (res.status !== 201) throw new Error("Impossible de créer le prompt");
+  return res.data;
+};
+
+// NOUVELLE FONCTION pour mettre à jour un prompt
+export const adminUpdatePrompt = async (promptId: string, promptData: { name: string; content: string; description?: string; category?: string; status?: string; }) => {
+  const res = await axios.put(`/admin/prompt/${promptId}`, promptData);
+  if (res.status !== 200) throw new Error("Impossible de mettre à jour le prompt");
+  return res.data;
+};
+
+// NOUVELLE FONCTION pour supprimer un prompt
+export const adminDeletePrompt = async (promptId: string) => {
+  const res = await axios.delete(`/admin/prompt/${promptId}`);
+  if (res.status !== 200) throw new Error("Impossible de supprimer le prompt");
+  return res.data;
+};
