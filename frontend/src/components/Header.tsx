@@ -167,7 +167,7 @@ const Header = ({ onMenuClick }: { onMenuClick: () => void }) => {
                   bg="#03a3c2"
                   to="/login"
                   text="Connexion"
-                  textColor="black"
+                  textColor="white"
                   style={isMobile ? { padding: '6px 10px', fontSize: '0.8rem' } : {}}
                 />
                 <NavigationLink

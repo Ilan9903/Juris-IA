@@ -215,3 +215,10 @@ export const analyzeDocumentWithQuestion = async (file: File, question: string) 
     throw error;
   }
 };
+
+// --- FONCTIONS ADMIN ---
+export const adminGetAllUsers = async () => {
+  const res = await axios.get("/admin/users");
+  if (res.status !== 200) throw new Error("Impossible de récupérer les utilisateurs");
+  return res.data;
+};

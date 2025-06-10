@@ -100,7 +100,7 @@ const Signup = () => {
               padding: { xs: "25px", sm: "30px" },
               boxShadow: "0px 8px 25px rgba(0, 0, 0, 0.15)",
               borderRadius: "12px",
-              bgcolor: "rgba(17, 29, 39, 0.85)", // Similaire à Login pour la cohérence
+              bgcolor: "#172331", // Similaire à Login pour la cohérence
               backdropFilter: "blur(8px)",
             }}
           >
@@ -124,12 +124,13 @@ const Signup = () => {
                 py: 1.5,
                 mt: 3,
                 borderRadius: "8px",
-                bgcolor: "#51538f", // Couleur différente pour le bouton S'inscrire
+                bgcolor: "#1f505f", // Couleur différente pour le bouton S'inscrire
                 color: "white",
                 fontWeight: "bold",
                 fontSize: "1rem",
                 ":hover": {
-                  bgcolor: "#3c3e70", // Variante plus foncée au survol
+                  bgcolor: "white",
+                  color: "#1f505f",// Variante plus foncée au survol
                   // Ou bgcolor: "white", color: "black" si vous préférez ce style de survol
                 },
               }}

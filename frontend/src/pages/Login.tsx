@@ -105,7 +105,7 @@ const Login = () => {
               padding: { xs: "25px", sm: "30px" },
               boxShadow: "0px 8px 25px rgba(0, 0, 0, 0.15)", // Ombre plus douce
               borderRadius: "12px", // Coins plus arrondis
-              bgcolor: "rgba(17, 29, 39, 0.85)", // Fond légèrement différent pour se détacher
+              bgcolor: "#172331", // Fond légèrement différent pour se détacher
               backdropFilter: "blur(8px)",     // Effet de flou
             }}
           >
@@ -128,12 +128,13 @@ const Login = () => {
                 py: 1.5,
                 mt: 3,
                 borderRadius: "8px", // Coins du bouton arrondis
-                bgcolor: "#00fffc",
-                color: "black",
+                bgcolor: "#03a3c2",
+                color: "white",
                 fontWeight: "bold",
                 fontSize: "1rem",
                 ":hover": {
                   bgcolor: "white",
+                  color: "#03a3c2",
                 },
               }}
               endIcon={<IoIosLogIn />}
