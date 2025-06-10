@@ -70,7 +70,7 @@ const UserManagement = () => {
                                     </Tooltip>
                                     <Tooltip title="Supprimer">
                                         <IconButton onClick={() => console.log('Delete user:', user._id)}>
-                                            <DeleteIcon sx={{ color: 'red' }} />
+                                            <DeleteIcon sx={{ color: 'grey.500', '&:hover': { color: 'red' } }} />
                                         </IconButton>
                                     </Tooltip>
                                 </TableCell>

@@ -135,6 +135,11 @@ export const adminGetAllArticles = async () => {
   return res.data;
 };
 
+export const adminGetAllPrompts = async () => {
+  const res = await axios.get("/admin/prompts");
+  if (res.status !== 200) throw new Error("Impossible de récupérer les prompts");
+  return res.data;
+};
 
 export const getRecentArticles = async (limit: number = 5) => { // Limite par défaut à 5 articles
   try {

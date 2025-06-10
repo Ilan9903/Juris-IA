@@ -18,6 +18,7 @@ import Signup from "./pages/Signup";
 
 // Imports des nouvelles pages et composants admin
 import ArticleManagement from "./components/admin/ArticleManagement";
+import PromptManagement from "./components/admin/PromptManagement";
 import UserManagement from "./components/admin/UserManagement";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
@@ -78,9 +79,7 @@ const App = () => {
               {/* La sous-route pour la gestion des utilisateurs (ex: /admin/users) */}
               <Route path="users" element={<UserManagement />} />
               <Route path="articles" element={<ArticleManagement />} />
-              {/* TODO: Ajouter les routes pour les articles et les prompts ici */}
-              {/* <Route path="articles" element={<ArticleManagement />} /> */}
-              {/* <Route path="prompts" element={<PromptManagement />} /> */}
+              <Route path="prompts" element={<PromptManagement />} />
             </Route>
           </Route>
 
