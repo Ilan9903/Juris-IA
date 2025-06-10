@@ -8,9 +8,10 @@ body {
   padding: 0;
   background: #05101c;
   background-color: #0b1929;
-  /* background-color: red !important; */
   color: white;
   font-family: "Roboto Slab", serif;
+  /* Ajouter overflow-x: hidden; pour éviter tout défilement horizontal sur la page */
+  overflow-x: hidden;
 }
 
 /* Styles pour contrer l'autocomplétion des navigateurs */
@@ -19,13 +20,9 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 1000px #333 inset !important;
-  /* Remplace #333 par la couleur de fond de tes inputs */
   -webkit-text-fill-color: white !important;
-  /* Couleur du texte auto-rempli */
   caret-color: white !important;
-  /* Couleur du curseur */
   background-color: #333 !important;
-  /* Pour une compatibilité maximale, même si box-shadow est prioritaire */
 }
 
 /* Pour inverser uniquement les avatars MUI par défaut */
@@ -62,7 +59,38 @@ input:-webkit-autofill:active {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(359deg);
   }
+}
+
+/* --- DÉBUT DES STYLES GLOBAUX POUR LA BARRE DE DÉFILEMENT --- */
+
+/* Cible la barre de défilement pour les navigateurs basés sur WebKit */
+::-webkit-scrollbar {
+  width: 10px;
+  /* Largeur de la barre */
+  height: 10px;
+}
+
+/* Cible la piste (le fond de la barre) */
+::-webkit-scrollbar-track {
+  background-color: rgb(17, 29, 39);
+  /* Fond sombre et discret */
+}
+
+/* Cible la poignée (la partie mobile) */
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 255, 252, 0.4);
+  /* Couleur d'accent, semi-transparente */
+  border-radius: 5px;
+  border: 2px solid rgb(17, 29, 39);
+  /* Bordure pour un effet de flottement */
+}
+
+/* Style de la poignée au survol */
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 255, 252, 0.7);
+  /* Plus opaque au survol */
 }

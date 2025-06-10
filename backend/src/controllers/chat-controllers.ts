@@ -70,6 +70,7 @@ export const createNewConversation = async (req: Request, res: Response, next: N
 export const addMessageToConversation = async (req: Request, res: Response, next: NextFunction) => {
   const { message } = req.body;
   const conversationId = req.params.id;
+  const openai = configureOpenAI();
 
   try {
     const user = await User.findById(res.locals.jwtData.id);
@@ -77,6 +78,37 @@ export const addMessageToConversation = async (req: Request, res: Response, next
 
     const conversation = user.conversations.id(conversationId);
     if (!conversation) return res.status(404).send("Conversation non trouvée.");
+
+    // Variable pour stocker le nouveau titre s'il est généré
+    let newTitle = null;
+
+    // Si c'est le premier message de l'utilisateur dans cette conversation
+    if (conversation.messages.length === 0) {
+      // Prompt spécifique pour demander à l'IA de créer un titre
+      const titlePrompt = `Résume la question suivante en un titre court et pertinent de 5 mots maximum. Ne retourne que le titre, rien d'autre. Question: "${message}"`;
+
+      try {
+        const titleResponse = await openai.chat.completions.create({
+          model: "gpt-4.1-mini-2025-04-14", // Un modèle rapide et peu coûteux est parfait pour ça
+          messages: [{ role: "user", content: titlePrompt }],
+          max_tokens: 15,
+          temperature: 0.3, // Pour un résultat plus prévisible
+        });
+
+        // Nettoyer le titre reçu de l'IA (enlever les guillemets, etc.)
+        const generatedTitle = titleResponse.choices[0]?.message?.content?.trim().replace(/"/g, "") || "";
+
+        if (generatedTitle) {
+          conversation.title = generatedTitle;
+          newTitle = generatedTitle; // On sauvegarde le nouveau titre pour le renvoyer au frontend
+        }
+      } catch (titleError) {
+        console.error("Erreur lors de la génération du titre par l'IA:", titleError);
+        // En cas d'erreur, on utilise l'ancienne méthode (tronquer le message)
+        conversation.title = message.substring(0, 40) + (message.length > 40 ? "..." : "");
+        newTitle = conversation.title;
+      }
+    }
 
     // Logique existante pour le prompt système
     const juridicalPrompt = await PromptTemplate.findOne({ name: "ASSISTANT_JURIDIQUE_GENERAL", status: "published" });
@@ -100,7 +132,6 @@ export const addMessageToConversation = async (req: Request, res: Response, next
     }
 
     // Appel à l'IA
-    const openai = configureOpenAI();
     const chatResponse = await openai.chat.completions.create({
       model: "gpt-4.1-mini-2025-04-14",
       messages: messages,
@@ -114,7 +145,11 @@ export const addMessageToConversation = async (req: Request, res: Response, next
     }
 
     await user.save();
-    return res.status(200).json({ messages: conversation.messages });
+    // Renvoyer les messages ET le nouveau titre si il a été créé
+    return res.status(200).json({
+      messages: conversation.messages,
+      updatedTitle: newTitle // Sera null si ce n'est pas le premier message
+    });
 
   } catch (error) {
     console.error(error);

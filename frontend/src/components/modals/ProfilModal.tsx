@@ -215,7 +215,7 @@ const ProfileModal = () => {
                     <Typography variant="h6">Profil Utilisateur 🪪</Typography>
                     <Box>
                         <Tooltip title="Paramètres">
-                            <IconButton onClick={navigateToSettings} sx={{ color: "white" }}>
+                            <IconButton onClick={navigateToSettings} sx={{ color: "white", marginRight: 1 }}>
                                 <SettingsIcon />
                             </IconButton>
                         </Tooltip>
@@ -373,6 +373,7 @@ const ProfileModal = () => {
 
                         <TextField
                             fullWidth
+                            autoFocus
                             label="Email"
                             value={email}
                             disabled={!canEditEmail}

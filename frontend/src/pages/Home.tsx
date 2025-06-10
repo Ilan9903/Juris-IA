@@ -180,7 +180,7 @@ const Home = () => {
                 width: "100%", // L'image prend 100% de son nouveau parent Box
                 height: "auto", // Garder le ratio
                 borderRadius: 20,
-                boxShadow: "-5px -5px 105px #00d3d0",
+                boxShadow: "-5px -5px 105px #03a3c2",
                 padding: isMobile ? "5px" : "10px",
               }}
             />
@@ -223,7 +223,7 @@ const Home = () => {
                     }}>
                       <CardContent sx={{ flexGrow: 1, p: isMobile ? 1.2 : 1.8 }}>
                         <Typography variant="h6" component="div" sx={{
-                          color: "#00fffc",
+                          color: "#03a3c5",
                           minHeight: '3em',
                           fontSize: isMobile ? '0.85rem' : (isTablet || isDesktopSmall ? '1rem' : '1.1rem'),
                           lineHeight: 1.25,
@@ -250,7 +250,7 @@ const Home = () => {
                         <Button
                           size="small"
                           variant="outlined"
-                          sx={{ color: "#00fffc", borderColor: "#00fffc", fontSize: isMobile ? '0.65rem' : '0.8rem', '&:hover': { backgroundColor: 'rgba(0, 255, 252, 0.1)', borderColor: "#00ddda" } }}
+                          sx={{ color: "#03a3c5", borderColor: "#03a3c5", fontSize: isMobile ? '0.65rem' : '0.8rem', '&:hover': { backgroundColor: 'rgba(0, 255, 252, 0.06)', borderColor: "#00ddda" } }}
                           onClick={() => handleArticleClick(article._id)}
                         >
                           En savoir plus
@@ -269,7 +269,7 @@ const Home = () => {
               variant="contained"
               component={Link}
               to="/articles"
-              sx={{ bgcolor: "#00fffc", color: "black", fontWeight: 'bold', '&:hover': { bgcolor: "#00d3d0" } }}
+              sx={{ bgcolor: "#03a3c9", color: "black", fontWeight: 'bold', '&:hover': { bgcolor: "#00dddc" } }}
             >
               Voir tous les articles
             </Button>

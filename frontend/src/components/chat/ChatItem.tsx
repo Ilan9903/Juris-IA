@@ -87,7 +87,7 @@ const ChatItem = ({
     }
   } else { // Assistant
     avatarProps.children = <img src="/logo.png" alt="openai" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />;
-    avatarProps.sx.bgcolor = "#1c2833"; // Couleur de fond pour avatar IA
+    avatarProps.sx.bgcolor = "#0a2833"; // Couleur de fond pour avatar IA
   }
 
   return (

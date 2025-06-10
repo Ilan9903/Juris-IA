@@ -107,7 +107,7 @@ const SettingsModal = () => {
                 return (
                     <Stack spacing={2}>
                         <Typography color="error.main">Cette action est irréversible. Pour confirmer, veuillez entrer votre mot de passe.</Typography>
-                        <TextField fullWidth autoFocus label="Mot de passe" type="password" value={passwordForDelete} onChange={(e) => setPasswordForDelete(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleAccountDeleteConfirm(); }} InputProps={{ style: { color: "white" } }} InputLabelProps={{ style: { color: "grey.400" } }} sx={{ "& .MuiOutlinedInput-notchedOutline": { borderColor: "grey.700" } }} />
+                        <TextField fullWidth autoFocus label="Mot de passe" type="password" value={passwordForDelete} onChange={(e) => setPasswordForDelete(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleAccountDeleteConfirm(); }} InputProps={{ style: { color: "white" } }} InputLabelProps={{ style: { color: "white" } }} sx={{ "& .MuiOutlinedInput-notchedOutline": { borderColor: "grey.700" } }} />
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
                             <Button variant="outlined" onClick={() => setView('main')}>Annuler</Button>
                             <Button variant="contained" color="error" onClick={handleAccountDeleteConfirm}>Supprimer Définitivement</Button>
@@ -133,7 +133,7 @@ const SettingsModal = () => {
                             <Typography variant="overline" sx={{ color: 'grey.500' }}>Apparence</Typography>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                                 <Typography>Mode Compact</Typography>
-                                <Switch checked={isCompactMode} onChange={toggleCompactMode} />
+                                <Switch checked={isCompactMode} onChange={toggleCompactMode} sx={{ color: '#03a3c2' }} />
                             </Box>
                         </Box>
                         <Box sx={{ mt: 2, p: 2, border: '1px solid rgba(255, 82, 82, 0.5)', borderRadius: '8px' }}>
@@ -143,7 +143,7 @@ const SettingsModal = () => {
                                 <Button size="small" variant="contained" color="error" onClick={() => setView('deleteConfirm')}>Supprimer</Button>
                             </Box>
                             <Typography variant="caption" sx={{ color: 'grey.500', display: 'block', mt: 1 }}>
-                                Cette action est irréversible. <br></br> Toutes vos données seront définitivement perdues.
+                                Cette action est irréversible. <br></br>Toutes vos données seront définitivement perdues.
                             </Typography>
                         </Box>
                     </Stack>

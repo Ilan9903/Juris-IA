@@ -23,6 +23,8 @@ import red from "@mui/material/colors/red";
 
 // --- Imports des composants et helpers locaux ---
 import ChatItem from "../components/chat/ChatItem";
+import ChatItemSkeleton from "../components/chat/ChatItemSkeleton";
+import ConfirmationModal from "../components/modals/ConfirmationModal";
 import { useUI } from "../context/UIContext"; // Import du contexte UI pour le Drawer
 import { useAuth } from "../context/useAuth";
 import {
@@ -66,6 +68,9 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
 
   const { openSettingsModal } = useUI();
+
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
 
   // --- Effets (useEffect) ---
   useEffect(() => {
@@ -156,19 +161,34 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
     }
   };
 
+  // MODIFICATION : Cette fonction va maintenant préparer la suppression et ouvrir la modale
   const handleDeleteConversation = async (e: React.MouseEvent, conversationId: string) => {
-    e.stopPropagation();
-    if (!window.confirm("Voulez-vous vraiment supprimer cette discussion ?")) return;
+    e.stopPropagation(); // Empêche de cliquer sur l'item de liste en même temps
+    setConversationToDelete(conversationId); // On stocke l'ID de la conversation à supprimer
+    setConfirmModalOpen(true); // On ouvre la modale de confirmation
+  };
+
+  // NOUVELLE FONCTION : Cette fonction sera appelée si l'utilisateur clique sur "Confirmer" dans la modale
+  const handleConfirmDelete = async () => {
+    if (!conversationToDelete) return; // Sécurité au cas où
+
     try {
-      await deleteConversation(conversationId);
-      const updatedConversations = conversations.filter(c => c._id !== conversationId);
+      await deleteConversation(conversationToDelete);
+      toast.success("Discussion supprimée.");
+
+      const updatedConversations = conversations.filter(c => c._id !== conversationToDelete);
       setConversations(updatedConversations);
-      if (activeConversationId === conversationId) {
+
+      // Si la conversation supprimée était l'active, on passe à la suivante ou à rien
+      if (activeConversationId === conversationToDelete) {
         setActiveConversationId(updatedConversations.length > 0 ? updatedConversations[0]._id : null);
       }
-      toast.success("Discussion supprimée.");
     } catch (error) {
       toast.error("Impossible de supprimer la discussion.");
+    } finally {
+      // Quoi qu'il arrive, on ferme la modale et on réinitialise l'ID
+      setConfirmModalOpen(false);
+      setConversationToDelete(null);
     }
   };
 
@@ -226,6 +246,16 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
       try {
         const data = await sendChatMessage(conversationIdToUse, content);
         setChatMessages(data.messages);
+        if (data.updatedTitle) {
+          // Mettre à jour la liste des conversations dans la sidebar
+          setConversations(prevConvos =>
+            prevConvos.map(conv =>
+              conv._id === conversationIdToUse
+                ? { ...conv, title: data.updatedTitle } // Remplacer le titre de la conversation active
+                : conv
+            )
+          );
+        }
       } catch (error) {
         toast.error("Erreur : Message non envoyé.");
         setChatMessages(prev => prev.slice(0, prev.length - 1));
@@ -252,7 +282,7 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
     >
       <Button
         variant="outlined" startIcon={<AddCommentIcon />} onClick={handleNewConversation}
-        sx={{ borderColor: '#00fffc', color: '#00fffc', '&:hover': { borderColor: 'white', color: 'white' } }}
+        sx={{ borderColor: '#03a3c2', color: '#d5ded8', '&:hover': { borderColor: 'white', color: 'white' } }}
       >
         Nouveau Chat
       </Button>
@@ -280,7 +310,7 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
                   sx={{
                     borderRadius: '8px',
                     mb: 0.5,
-                    '&.Mui-selected': { bgcolor: 'rgba(0, 255, 252, 0.1)', '&:hover': { bgcolor: 'rgba(0, 255, 252, 0.2)' } }
+                    '&.Mui-selected': { bgcolor: 'rgba(0, 255, 255, 0.05)', '&:hover': { bgcolor: 'rgba(0, 255, 252, 0.1)' } }
                   }}
                 >
                   <ListItemText
@@ -391,7 +421,11 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
 
           <Box sx={chatContainerSx}>
             {isLoadingMessages ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>
+              <Box>
+                <ChatItemSkeleton role="assistant" />
+                <ChatItemSkeleton role="user" />
+                <ChatItemSkeleton role="assistant" />
+              </Box>
             ) : chatMessages.length > 0 ? (
               chatMessages.map((chat, index) => <ChatItem key={`${activeConversationId}-${index}`} content={chat.content} role={chat.role} />)
             ) : (
@@ -447,6 +481,13 @@ const Chat = ({ isDrawerOpen, setDrawerOpen }: { isDrawerOpen: boolean, setDrawe
           </Box>
         </Box>
       </Box>
+      <ConfirmationModal
+        open={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Confirmer la suppression"
+        message="Voulez-vous vraiment supprimer cette discussion ? Cette action est irréversible."
+      />
     </>
   );
 };

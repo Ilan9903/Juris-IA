@@ -141,13 +141,14 @@ const Header = ({ onMenuClick }: { onMenuClick: () => void }) => {
                       onClick={handleLogout}
                       sx={{
                         color: "white",
-                        bgcolor: "#1f505f",
-                        '&:hover': { bgcolor: "#3c3e70" },
+                        bgcolor: "rgba(0, 255, 252, 0.4)",
+                        '&:hover': { bgcolor: "rgba(0, 255, 252, 0.7)" },
                         padding: "8px",
-                        marginLeft: "4px"
+                        marginLeft: "4px",
+                        marginRight: "4px",
                       }}
                     >
-                      <LogoutIcon fontSize="small" />
+                      <LogoutIcon fontSize="medium" />
                     </IconButton>
                   </Tooltip>
                 ) : (
