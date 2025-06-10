@@ -43,7 +43,7 @@ const Signup = () => {
     // Conteneur principal de la page
     <Box
       width="100%"
-      minHeight="calc(100vh - 64px)" // Ajustez 64px à la hauteur de votre header si elle est différente
+      minHeight="calc(100vh - 100px)" // Ajustez 64px à la hauteur de votre header si elle est différente
       display="flex"
       alignItems="center"
       justifyContent="center" // Centre le contenu global horizontalement

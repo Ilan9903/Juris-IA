@@ -413,7 +413,7 @@ const ProfileModal = () => {
                             </Box>
                         )}
 
-                        <FormControl fullWidth sx={{ mb: 3 }}>
+                        <FormControl fullWidth sx={{ mb: 3, bgcolor: "transparent" }}>
                             <InputLabel id="status-label">Statut</InputLabel>
                             <Select
                                 labelId="status-label"

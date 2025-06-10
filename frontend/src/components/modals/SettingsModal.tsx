@@ -9,19 +9,21 @@ import { changeUserPassword, deleteCurrentUserAccount } from '../../helpers/api-
 
 // Style de la modale, inspiré de ProfilModal pour la cohérence
 const style = {
-    position: 'absolute' as const,
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: { xs: '90%', sm: 500 },
-    bgcolor: '#0b1929',
-    color: 'white',
+    position: "fixed" as const,
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    bgcolor: "#0b1929",
     borderRadius: 3,
     boxShadow: 24,
-    p: { xs: 2, sm: 3, md: 4 },
-    outline: 'none',
-    maxHeight: '90vh',
-    overflowY: 'auto'
+    p: { xs: 2, sm: 3, md: 4 }, // Padding responsif
+    width: { xs: "80%", sm: "60%", md: "auto" }, // Largeur responsive
+    minWidth: { md: 320 }, // Garder une largeur minimale sur desktop
+    maxWidth: { xs: "calc(100% - 32px)", sm: 400, md: 400 }, // Limiter la largeur max
+    color: "white",
+    outline: "none",
+    maxHeight: "90vh", // Empêcher le modal d'être trop haut
+    overflowY: "auto",  // Permettre le scroll interne si le contenu est trop grand
 };
 
 const SettingsModal = () => {
