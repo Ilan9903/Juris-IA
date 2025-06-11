@@ -12,7 +12,6 @@ const style = {
     maxWidth: '800px',
     bgcolor: '#0b1929',
     color: 'white',
-    border: '1px solid grey.800',
     borderRadius: 3,
     boxShadow: 24,
     p: 4,
@@ -84,13 +83,105 @@ const PromptModal = ({ open, onClose, onSuccess, promptToEdit }: PromptModalProp
                     {isEditing ? "Modifier le Prompt IA" : "Créer un Nouveau Prompt"}
                 </Typography>
                 <Stack spacing={2}>
-                    <TextField label="Nom du Prompt (unique)" name="name" value={formData.name} onChange={handleChange} fullWidth required />
-                    <TextField label="Description" name="description" value={formData.description} onChange={handleChange} fullWidth />
-                    <TextField label="Catégorie" name="category" value={formData.category} onChange={handleChange} fullWidth />
-                    <TextField label="Contenu du Prompt (les instructions pour l'IA)" name="content" value={formData.content} onChange={handleChange} fullWidth required multiline rows={8} />
+                    <TextField label="Nom du Prompt (unique)" name="name" value={formData.name} onChange={handleChange} fullWidth required sx={{
+                        mb: 2,
+                        "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "white !important",
+                            opacity: 1,
+                        },
+                        "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "white",
+                        },
+                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "white",
+                        },
+                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "white",
+                        },
+                        "& .MuiInputLabel-root.Mui-disabled": {
+                            color: "white !important",
+                        },
+                    }} />
+                    <TextField label="Description" name="description" value={formData.description} onChange={handleChange} fullWidth sx={{
+                        mb: 2,
+                        "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "white !important",
+                            opacity: 1,
+                        },
+                        "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "white",
+                        },
+                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "white",
+                        },
+                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "white",
+                        },
+                        "& .MuiInputLabel-root.Mui-disabled": {
+                            color: "white !important",
+                        },
+                    }} />
+                    <TextField label="Catégorie" name="category" value={formData.category} onChange={handleChange} fullWidth sx={{
+                        mb: 2,
+                        "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "white !important",
+                            opacity: 1,
+                        },
+                        "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "white",
+                        },
+                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "white",
+                        },
+                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "white",
+                        },
+                        "& .MuiInputLabel-root.Mui-disabled": {
+                            color: "white !important",
+                        },
+                    }} />
+                    <TextField label="Contenu du Prompt (les instructions pour l'IA)" name="content" value={formData.content} onChange={handleChange} fullWidth required multiline rows={8} sx={{
+                        mb: 2,
+                        "& .MuiInputBase-input.Mui-disabled": {
+                            WebkitTextFillColor: "white !important",
+                            opacity: 1,
+                        },
+                        "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "white",
+                        },
+                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "white",
+                        },
+                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "white",
+                        },
+                        "& .MuiInputLabel-root.Mui-disabled": {
+                            color: "white !important",
+                        },
+                    }} />
                     <FormControl fullWidth>
                         <InputLabel>Statut</InputLabel>
-                        <Select name="status" value={formData.status} label="Statut" onChange={handleChange}>
+                        <Select
+                            name="status"
+                            value={formData.status}
+                            label="Statut"
+                            onChange={handleChange}
+                            sx={{
+                                backgroundColor: "transparent",
+                                color: "white",
+                                ".MuiSelect-icon": { color: "white" },
+                                ".MuiOutlinedInput-notchedOutline": { color: "white", borderColor: "white" },
+                                "&:hover .MuiOutlinedInput-notchedOutline": { color: "white", borderColor: "white" },
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline": { color: "white", borderColor: "white" },
+                            }}
+                            MenuProps={{
+                                PaperProps: {
+                                    sx: {
+                                        backgroundColor: "rgb(17,29,39)",
+                                        color: "white",
+                                    },
+                                },
+                            }}>
                             <MenuItem value="draft">Brouillon (draft)</MenuItem>
                             <MenuItem value="published">Publié (published)</MenuItem>
                             <MenuItem value="archived">Archivé (archived)</MenuItem>
