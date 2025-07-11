@@ -13,7 +13,7 @@ Juris-IA est une plateforme web d’assistance juridique augmentée par intellig
   - Résumé automatique, identification de clauses clés, etc.
 
 - **Chatbot juridique intelligent :**
-  - Conversation avec un assistant IA spécialisé en droit (basé sur GPT-4+).
+  - Conversation avec un assistant IA spécialisé en droit (basé sur GPT 4.1-mini).
   - Historique des conversations et gestion multi-conversations.
   - Personnalisation du prompt système (assistant général, expert en droit du travail, etc.).
 
