@@ -99,7 +99,7 @@ npm run dev
 ```
 
 - Frontend : http://localhost:5173/
-- Backend API : [http://localhost:5000/api/v1/] (par défaut)
+- Backend API : http://localhost:5000/api/v1/ (par défaut)
 
 ---
 
